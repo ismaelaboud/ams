@@ -68,13 +68,15 @@
 |   Asset Model    |    |     Profile         |    |   User Model    |
 |  - id            |    |  - id               |    |  - id           |
 |  - name          |    |  - user             |    |  - username     |
-|  - type          |    |  - role             |    |  - password     |
+|  - asset_type    |    |  - role             |    |  - password     |
 |  - description   |    |  - department       |    |  - email        |
-|  - barcode       |    |                     |    |  - userLevel    |
-|  - category_id   |    |                     |    |  - dateJoined   |
+|  - serial_number |    |                     |    |  - first_name   |
+|  - category_id   |    |                     |    |  - last_name    |
 |  - tags (M2M)    |    |                     |    +-----------------+
 |  - assigned_to   |    |                     |
-|  - assigned_dept |    |                     |
+|  - assigned_department |                     |
+|  - date_recorded |    |                     |
+|  - status        |    |                     |
 +------------------+    +---------------------+
          |                        |
          |                        |
@@ -86,7 +88,7 @@
 |  - assets                                                  |
 |  - categories                                              |
 |  - tags                                                    |
-|  - users                                                   |
+|  - custom_user                                             |
 |  - profiles                                                |
 |  - roles                                                   |
 |  - departments                                             |
@@ -102,6 +104,7 @@
 +------------------+
 
 
+
 ## Explanation of Visual Representation
 
 1. **Client**: Represents the user interacting with the frontend application.
@@ -113,46 +116,64 @@
 7. **Database Models**: Represents the structure and relationships of database tables (assets, categories, tags, users, profiles, roles, departments).
 8. **Redis Cache Layer**: Caching frequently accessed data to improve performance.
 
-## Database Schema Representation
+# Database Schema Representation
 
-### Profile Table
+## Profile Table
 
-| Field         | Data Type     | Description                          |
-| ------------- | ------------- | ------------------------------------ |
-| id (PK)       | Integer       | Primary key                          |
-| user (FK)     | Integer       | Reference to Django User model       |
-| role          | String        | User role (`admin`, `user`, `manager`)|
-| department    | String        | Department assigned to the user      |
-| ...           | ...           | Other profile fields as needed       |
+| Field         | Data Type | Description                              |
+|---------------|-----------|------------------------------------------|
+| id (PK)       | Integer   | Primary key                              |
+| user_id (FK)  | Integer   | Reference to Django User model (`CustomUser`) |
+| role          | String    | User role (`admin`, `user`, `manager`)   |
+| department    | String    | Department assigned to the user          |
+| ...           | ...       | Other profile fields as needed           |
 
-### Asset Table
+## Asset Table
 
-| Field             | Data Type     | Description                          |
-| ----------------- | ------------- | ------------------------------------ |
-| id (PK)           | Integer       | Primary key                          |
-| name              | String        | Asset name                           |
-| asset_type        | String        | Type of asset                        |
-| description       | Text          | Asset description                    |
-| serial_number     | String        | Serial number for unique identification |
-| category (FK)     | Integer       | Reference to Category model          |
-| tags (M2M)        | Integer       | Many-to-Many relationship with Tag model |
-| assigned_to (FK)  | Integer       | Reference to User model (nullable)   |
-| assigned_department | String      | Department assigned to the asset     |
-| ...               | ...           | Other asset fields as needed         |
+| Field               | Data Type | Description                              |
+|---------------------|-----------|------------------------------------------|
+| id (PK)             | Integer   | Primary key                              |
+| name                | String    | Asset name                               |
+| asset_type          | String    | Type of asset                            |
+| description         | Text      | Asset description                        |
+| serial_number       | String    | Serial number for unique identification |
+| category_id (FK)    | Integer   | Reference to Category model              |
+| assigned_to_id (FK) | Integer   | Reference to User model (`CustomUser`) (nullable) |
+| assigned_department| String    | Department assigned to the asset         |
+| date_recorded       | DateTime  | Timestamp when asset record was created  |
+| status              | Boolean   | Asset status (`True` or `False`)         |
+| ...                 | ...       | Other asset fields as needed             |
 
-### Category Table
+## Category Table
 
-| Field         | Data Type     | Description                          |
-| ------------- | ------------- | ------------------------------------ |
-| id (PK)       | Integer       | Primary key                          |
-| name          | String        | Category name                        |
+| Field         | Data Type | Description                              |
+|---------------|-----------|------------------------------------------|
+| id (PK)       | Integer   | Primary key                              |
+| name          | String    | Category name                            |
 
-### Tag Table
+## Tag Table
 
-| Field         | Data Type     | Description                          |
-| ------------- | ------------- | ------------------------------------ |
-| id (PK)       | Integer       | Primary key                          |
-| name          | String        | Tag name                             |
+| Field         | Data Type | Description                              |
+|---------------|-----------|------------------------------------------|
+| id (PK)       | Integer   | Primary key                              |
+| name          | String    | Tag name                                 |
+
+## AssetAssignment Table
+
+| Field                  | Data Type | Description                              |
+|------------------------|-----------|------------------------------------------|
+| id (PK)                | Integer   | Primary key                              |
+| asset_id (FK)          | Integer   | Reference to Asset model                 |
+| user_id (FK)           | Integer   | Reference to User model (`CustomUser`)   |
+| assigned_to_id (FK)    | Integer   | Reference to Profile model               |
+| assigned_department_id | Integer   | Reference to Department model            |
+| date_assigned          | Date      | Date when the asset was assigned         |
+| return_date            | Date      | Expected return date (nullable)          |
+
+Symbols:
+- `(PK)`: Primary Key
+- `(FK)`: Foreign Key
+                          |
 
 Symbols:
 - `(FK)`: Foreign Key
