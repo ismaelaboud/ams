@@ -49,7 +49,12 @@ export function LoginForm() {
         Back
       </button>
       <div className="mt-8">
-      <h2 className="text-center text-2xl font-bold mb-6">Enter your credentials to Login</h2>
+        
+      
+        <h2 className ="text-3xl font-bold "> Login </h2>
+        <p className= "mb-4 text-muted-foreground">Enter your credentials to login</p>
+      
+      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
