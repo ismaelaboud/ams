@@ -1,5 +1,7 @@
+# assets/admin.py
+
 from django.contrib import admin
-from .models import CustomUser, Asset, Category, Tag, Department, AssetAssignment,Profile,AssetTag
+from .models import CustomUser, Asset, Category, Tag, Department, AssetAssignment, Profile, AssetTag
 
 # Register your models here.
 admin.site.register(CustomUser)
