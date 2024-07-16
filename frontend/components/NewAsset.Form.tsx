@@ -9,6 +9,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import {
   Form,
   FormControl,
@@ -30,8 +41,9 @@ const formSchema = z.object({
     message: "serial number must be at least 2 characters.",
   }),
   category: z.string().min(2, {
-    message: "descrption must be at least 2 characters.",
+    message: "Please select category.",
   }),
+  
 });
 
 const NewAssetForm: React.FC = () => {
@@ -39,7 +51,10 @@ const NewAssetForm: React.FC = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      description:""
+      description: "",
+      serial_number:null,
+      
+      
     },
   });
 
@@ -62,7 +77,9 @@ const NewAssetForm: React.FC = () => {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className={cn("block text-sm font-medium text-gray-700")}>
+                <FormLabel
+                  className={cn("block text-sm font-medium text-gray-700")}
+                >
                   Name
                 </FormLabel>
                 <Input placeholder="name" {...field} />
@@ -75,7 +92,9 @@ const NewAssetForm: React.FC = () => {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className={cn("block text-sm font-medium text-gray-700")}>
+                <FormLabel
+                  className={cn("block text-sm font-medium text-gray-700")}
+                >
                   Description
                 </FormLabel>
                 <Input placeholder="description" {...field} />
@@ -88,7 +107,9 @@ const NewAssetForm: React.FC = () => {
             name="serial_number"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className={cn("block text-sm font-medium text-gray-700")}>
+                <FormLabel
+                  className={cn("block text-sm font-medium text-gray-700")}
+                >
                   Serial number
                 </FormLabel>
                 <Input placeholder="serial number" {...field} />
@@ -101,10 +122,23 @@ const NewAssetForm: React.FC = () => {
             name="category"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className={cn("block text-sm font-medium text-gray-700")}>
+                <FormLabel
+                  className={cn("block text-sm font-medium text-gray-700")}
+                >
                   Category
                 </FormLabel>
-                <Input placeholder="select category" {...field} />
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="m@example.com">Asset 1</SelectItem>
+                  <SelectItem value="m@google.com">Asset 1</SelectItem>
+                  <SelectItem value="m@support.com">Asset 1</SelectItem>
+                </SelectContent>
+              </Select>
                 <FormMessage />
               </FormItem>
             )}
