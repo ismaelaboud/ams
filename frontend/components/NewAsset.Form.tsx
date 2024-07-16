@@ -23,6 +23,15 @@ const formSchema = z.object({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
   }),
+  description: z.string().min(2, {
+    message: "descrption must be at least 2 characters.",
+  }),
+  serial_number: z.number().min(2, {
+    message: "serial number must be at least 2 characters.",
+  }),
+  category: z.string().min(2, {
+    message: "descrption must be at least 2 characters.",
+  }),
 });
 
 const NewAssetForm: React.FC = () => {
@@ -30,6 +39,7 @@ const NewAssetForm: React.FC = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      description:""
     },
   });
 
@@ -55,14 +65,14 @@ const NewAssetForm: React.FC = () => {
                 <FormLabel className={cn("block text-sm font-medium text-gray-700")}>
                   Name
                 </FormLabel>
-                <Input placeholder="shadcn" {...field} />
+                <Input placeholder="name" {...field} />
                 <FormMessage />
               </FormItem>
             )}
           />
           <FormField
             control={control}
-            name="name"
+            name="description"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className={cn("block text-sm font-medium text-gray-700")}>
@@ -75,7 +85,7 @@ const NewAssetForm: React.FC = () => {
           />
           <FormField
             control={control}
-            name="name"
+            name="serial_number"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className={cn("block text-sm font-medium text-gray-700")}>
@@ -88,7 +98,7 @@ const NewAssetForm: React.FC = () => {
           />
           <FormField
             control={control}
-            name="name"
+            name="category"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className={cn("block text-sm font-medium text-gray-700")}>
@@ -105,7 +115,7 @@ const NewAssetForm: React.FC = () => {
               "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 focus:ring-blue-500"
             )}
           >
-            Add
+            Add Asset
           </Button>
         </form>
       </Form>
