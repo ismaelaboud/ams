@@ -68,13 +68,13 @@ const NewAssetForm: React.FC = () => {
   }
 
   return (
-    <div className="max-w-2xl  p-4">
+    <div className=" w-full  p-4">
       <h2 className="text-2xl font-bold mb-4">New Asset</h2>
       <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-[3rem] w-full">
           {/* grid*/}
-          <div className="grid grid-cols-2 gap-8" >
-          <div >
+          <div className="grid grid-cols-2 gap-8 w-full" >
+          <div className="space-y-[3rem] w-full">
           <FormField
             control={control}
             name="name"
@@ -107,7 +107,7 @@ const NewAssetForm: React.FC = () => {
           />
           </div>
 
-          <div>
+          <div className="space-y-[3rem]">
           <FormField
             control={control}
             name="serial_number"
