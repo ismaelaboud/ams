@@ -7,6 +7,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from assets.models import Category, Tag, Asset, CustomUser
 from assets.serializers import CategorySerializer, TagSerializer, AssetSerializer, RegisterSerializer, LoginSerializer
+from assets.models import AssetTag
+from assets.serializers import AssetTagSerializer
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     """
@@ -62,3 +65,21 @@ class LoginView(APIView):
         if serializer.is_valid():
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+class AssetTagViewSet(viewsets.ModelViewSet):
+    queryset = AssetTag.objects.all()
+    serializer_class = AssetTagSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        """
+        Custom method to determine permissions based on the request method.
+        """
+        if self.request.method in ['POST', 'PUT', 'DELETE']:
+            self.permission_classes = [IsAdminUser]  # Requires admin permission for write operations
+        else:
+            self.permission_classes = [IsAuthenticated]  # Requires authentication for other actions
+
+        return super(AssetTagViewSet, self).get_permissions()

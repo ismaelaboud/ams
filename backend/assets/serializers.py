@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
-from assets.models import CustomUser, Category, Tag, Asset
+from assets.models import CustomUser, Category, Tag, Asset, AssetTag
 
 # Serializer for the CustomUser model
 class UserSerializer(serializers.ModelSerializer):
@@ -13,13 +13,16 @@ class UserSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name']
+        fields = '__all__'
+
+       # fields = ['id', 'name']
 
 # Serializer for the Tag model
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ['id', 'name']
+        fields = '__all__'
+        #fields = ['id', 'name']
 
 # Serializer for the Asset model
 class AssetSerializer(serializers.ModelSerializer):
@@ -29,11 +32,13 @@ class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Asset
-        fields = [
-            'id', 'name', 'asset_type', 'description',
-            'serial_number', 'category', 'tags', 'assigned_to', 
-            'assigned_department'
-        ]
+        fields = '__all__'
+
+        #fields = [
+            #'id', 'name', 'asset_type', 'description',
+           # 'serial_number', 'category', 'tags', 'assigned_to', 
+            #'assigned_department'
+       # ]
 
 # Serializer for user registration
 class RegisterSerializer(serializers.ModelSerializer):
@@ -42,7 +47,17 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
+        #model = Asset
         fields = ['username', 'password', 'password2', 'email', 'first_name', 'last_name']
+        """
+    def create(self, validated_data):
+        user = Asset.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        return user
+        """
         extra_kwargs = {
             'username': {'required': True},
             'email': {'required': True},
@@ -92,3 +107,11 @@ class LoginSerializer(serializers.Serializer):
         attrs['access'] = str(refresh.access_token)
 
         return attrs
+    
+# Serializer for adding tags to an asset
+
+class AssetTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetTag
+        fields = ['id', 'asset', 'tag']
+        #fields = '__all__'
