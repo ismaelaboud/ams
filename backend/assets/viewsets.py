@@ -1,38 +1,38 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.views import APIView
+# views.py
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.contrib.auth import authenticate
-from assets.models import Category, Tag, Asset, CustomUser
-from assets.serializers import CategorySerializer, TagSerializer, AssetSerializer, RegisterSerializer, LoginSerializer, PasswordResetSerializer
+from .models import Category, Tag, Asset, CustomUser
+from .serializers import CategorySerializer, TagSerializer, AssetSerializer, RegisterSerializer, LoginSerializer, PasswordResetSerializer
 
-# ================== User registration logic ====================
 class RegisterView(APIView):
     """
     API view to register a new user.
     """
+    permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-# =============== User login logic =================
+
 class LoginView(APIView):
     """
     API view to login a user and provide JWT tokens.
     """
+    permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            return Response(serializer.validated_data, status=status.HTTP_200_OK)
+            return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# ================== User logout logic ==================
 class LogoutView(APIView):
     """
     API view to logout an authenticated user.
@@ -53,7 +53,6 @@ class LogoutView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# ==================== User Password Reset Logic =============================
 class PasswordResetView(APIView):
     """
     API view to reset a user's password by providing the old password.
@@ -75,27 +74,22 @@ class PasswordResetView(APIView):
                 return Response({"error": "Old password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# =================== Pulling all assets categories logic ==================
 class CategoryViewSet(viewsets.ModelViewSet):
     """
     Viewset for handling CRUD operations on Category objects.
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]  # Requires authentication for all actions
+    permission_classes = [IsAuthenticated]
 
-
-# ====================== Pulling all tags from the database =================
 class TagViewSet(viewsets.ModelViewSet):
     """
     Viewset for handling CRUD operations on Tag objects.
     """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [IsAuthenticated]  # Requires authentication for all actions
+    permission_classes = [IsAuthenticated]
 
-# ==================== Pulling all assets from the database =====================
 class AssetViewSet(viewsets.ModelViewSet):
     """
     Viewset for handling CRUD operations on Asset objects.
@@ -107,8 +101,14 @@ class AssetViewSet(viewsets.ModelViewSet):
         """
         Custom method to determine permissions based on the request method.
         """
-        if self.request.method in ['POST', 'PUT', 'DELETE']:
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
             return [IsAdminUser()]  # Requires admin permission for write operations
         else:
             return [IsAuthenticated()]  # Requires authentication for other actions
+
+    def perform_update(self, serializer):
+        """
+        Custom method to perform update operations.
+        """
+        serializer.save()
 
