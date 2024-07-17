@@ -1,5 +1,5 @@
 
-import NewAssetForm from '@/components/NewAsset.Form';
+import NewAssetForm from '@/components/dashboard/NewAsset.Form';
 import React from 'react';
 
 

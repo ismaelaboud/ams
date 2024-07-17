@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea"
 
 
 import {
@@ -37,8 +38,8 @@ const formSchema = z.object({
   description: z.string().min(2, {
     message: "descrption must be at least 2 characters.",
   }),
-  serial_number: z.number().min(2, {
-    message: "serial number must be at least 2 characters.",
+  serial_number: z.number().min(1, {
+    message: "Serial number must be at least 1.",
   }),
   category: z.string().min(2, {
     message: "Please select category.",
@@ -52,7 +53,8 @@ const NewAssetForm: React.FC = () => {
     defaultValues: {
       name: "",
       description: "",
-      serial_number:null,
+      serial_number:NaN,
+      category:""
       
       
     },
@@ -100,7 +102,7 @@ const NewAssetForm: React.FC = () => {
                 >
                   Description
                 </FormLabel>
-                <Input placeholder="description" {...field} />
+                <Textarea placeholder="description" {...field} />
                 <FormMessage />
               </FormItem>
             )}
