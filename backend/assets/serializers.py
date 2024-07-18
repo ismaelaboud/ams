@@ -1,14 +1,64 @@
 # serializers.py
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import CustomUser, Category, Tag, Asset
+from assets.models import CustomUser, Category, Tag, Asset, AssetTag
 
+# Serializer for the CustomUser model
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'email']
+
+# Serializer for the Category model
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+       # fields = ['id', 'name']
+
+# Serializer for the Tag model
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+        #fields = ['id', 'name']
+
+# Serializer for the Asset model
+class AssetSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    tags = TagSerializer(many=True)
+    assigned_to = UserSerializer()
+
+    class Meta:
+        model = Asset
+        fields = '__all__'
+
+        #fields = [
+            #'id', 'name', 'asset_type', 'description',
+           # 'serial_number', 'category', 'tags', 'assigned_to', 
+            #'assigned_department'
+       # ]
+
+# Serializer for user registration
+from .models import CustomUser, Category, Tag, Asset
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = CustomUser
+        #model = Asset
+        fields = ['username', 'password', 'password2', 'email', 'first_name', 'last_name']
+        """
+    def create(self, validated_data):
+        user = Asset.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        return user
+        """
         fields = ['first_name', 'last_name', 'email', 'username', 'password', 'password2']
         extra_kwargs = {
             'first_name': {'required': True},
@@ -54,6 +104,14 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("User does not exist")
 
         return attrs
+    
+# Serializer for adding tags to an asset
+
+class AssetTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetTag
+        fields = ['id', 'asset', 'tag']
+        #fields = '__all__'
 
 class PasswordResetSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)

@@ -4,6 +4,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from assets.models import Category, Tag, Asset, CustomUser
+from assets.serializers import CategorySerializer, TagSerializer, AssetSerializer, RegisterSerializer, LoginSerializer
+from assets.models import AssetTag
+from assets.serializers import AssetTagSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Category, Tag, Asset, CustomUser
 from .serializers import CategorySerializer, TagSerializer, AssetSerializer, RegisterSerializer, LoginSerializer, PasswordResetSerializer
@@ -112,3 +117,30 @@ class AssetViewSet(viewsets.ModelViewSet):
         """
         serializer.save()
 
+class LoginView(APIView):
+    """
+    API view to login a user and provide JWT tokens.
+    """
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+class AssetTagViewSet(viewsets.ModelViewSet):
+    queryset = AssetTag.objects.all()
+    serializer_class = AssetTagSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        """
+        Custom method to determine permissions based on the request method.
+        """
+        if self.request.method in ['POST', 'PUT', 'DELETE']:
+            self.permission_classes = [IsAdminUser]  # Requires admin permission for write operations
+        else:
+            self.permission_classes = [IsAuthenticated]  # Requires authentication for other actions
+
+        return super(AssetTagViewSet, self).get_permissions()
