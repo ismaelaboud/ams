@@ -1,13 +1,13 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
 
-# Custom User model extending AbstractUser
 class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True, max_length=50)  # Unique email field for the user
-    firstName = models.CharField(max_length=30)  # First name of the user
-    lastName = models.CharField(max_length=30)  # Last name of the user
+    email = models.EmailField(unique=True, max_length=50)
+    firstName = models.CharField(max_length=30)
+    lastName = models.CharField(max_length=30)
     
-    # Many-to-many relationship with groups, with a custom related_name to avoid clashes
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='customUserGroups',
@@ -16,7 +16,6 @@ class CustomUser(AbstractUser):
         help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
     )
     
-    # Many-to-many relationship with user permissions, with a custom related_name to avoid clashes
     user_permissions = models.ManyToManyField(
         'auth.Permission',
         related_name='customUserPermissions',
@@ -26,18 +25,36 @@ class CustomUser(AbstractUser):
     )
 
     def __str__(self):
-        return self.username  # Return username as string representation
+        return self.username
 
 
 class Department(models.Model):
-    id = models.AutoField(primary_key=True)  # Unique identifier for the department
-    name = models.CharField(max_length=50)  # Department name
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50)
 
     def __str__(self):
-        return self.name  # Return department name
+        return self.name
 
     class Meta:
-        db_table = 'departments'  # Table name for Department model
+        db_table = 'departments'
+
+
+@receiver(post_migrate)
+def create_default_departments(sender, **kwargs):
+    if sender.name == 'assets':
+        default_departments = [
+            'Technology',
+            'Communication',
+            'Heritage',
+            'Creative',
+            'Case management',
+            'Community',
+            'Green Economy',
+            'Entrepreneurship',
+            'Engineering',
+        ]
+        for department_name in default_departments:
+            Department.objects.get_or_create(name=department_name)
 
 
 class Profile(models.Model):
@@ -49,78 +66,99 @@ class Profile(models.Model):
         (ADMIN_ROLE, 'Admin'),
     ]
 
-    id = models.AutoField(primary_key=True)  # Unique identifier for the profile
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)  # One-to-one relationship with CustomUser
-    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default=USER_ROLE)  # Role of the user
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)  # Department of the user
+    id = models.AutoField(primary_key=True)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default=USER_ROLE)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.user.username  # Return username of associated user
+        return self.user.username
 
     class Meta:
-        db_table = 'profiles'  # Table name for Profile model
+        db_table = 'profiles'
 
 
 class Category(models.Model):
-    id = models.AutoField(primary_key=True)  # Unique identifier for the category
-    name = models.CharField(max_length=50)  # Name of the category
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50)
 
     def __str__(self):
-        return self.name  # Return category name
+        return self.name
 
     class Meta:
-        db_table = 'categories'  # Table name for Category model
+        db_table = 'categories'
+
+
+@receiver(post_migrate)
+def create_default_categories(sender, **kwargs):
+    if sender.name == 'assets':
+        default_categories = [
+            'Furnitures',
+            'Electronics',
+            'Office Supplies',
+        ]
+        for category_name in default_categories:
+            Category.objects.get_or_create(name=category_name)
 
 
 class Tag(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50)  # Name of the tag
+    name = models.CharField(max_length=50)
 
     def __str__(self):
-        return self.name  # Return tag name
+        return self.name
 
     class Meta:
-        db_table = 'tags'  # Table name for Tag model
+        db_table = 'tags'
+
+
 class Asset(models.Model):
-    id = models.AutoField(primary_key=True)  # Unique identifier for the asset
-    name = models.CharField(max_length=50)  # Name of the asset
-    assetType = models.CharField(max_length=50)  # Type of the asset
-    description = models.TextField()  # Description of the asset
-    serialNumber = models.CharField(max_length=255, unique=True)  # Unique serial number of the asset
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)  # Category foreign key
-    assignedDepartment = models.ForeignKey(Department, on_delete=models.CASCADE)  # Department to which the asset is assigned
-    dateRecorded = models.DateTimeField(auto_now_add=True)  # Timestamp when the asset was recorded
-    status = models.BooleanField(default=True)  # Status of the asset (active/inactive)
-    tags = models.ManyToManyField(Tag, through='AssetTag')  # Many-to-many relationship with tags
+    STATUS_CHOICES = [
+        ('Available', 'Available'),
+        ('Booked', 'Booked'),
+        ('Maintenance', 'Maintenance'),
+        ('In use', 'In use'),
+        ('Archived', 'Archived'),
+    ]
+
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50)
+    assetType = models.CharField(max_length=50)
+    description = models.TextField()
+    serialNumber = models.CharField(max_length=255, unique=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    assignedDepartment = models.ForeignKey(Department, on_delete=models.CASCADE)
+    dateRecorded = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Available')
 
     def __str__(self):
-        return self.name  # Return asset name
+        return self.name
 
     class Meta:
-        db_table = 'assets'  # Table name for Asset model
+        db_table = 'assets'
 
 
 class AssetTag(models.Model):
-    id = models.AutoField(primary_key=True)  # Unique identifier for the AssetTag
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)  # Foreign key to Asset
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)  # Foreign key to Tag
+    id = models.AutoField(primary_key=True)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'asset_tags'  # Table name for AssetTag model
-        unique_together = ('asset', 'tag')  # Ensure unique asset-tag pairs
+        db_table = 'asset_tags'
+        unique_together = ('asset', 'tag')
 
 
 class AssetAssignment(models.Model):
-    id = models.AutoField(primary_key=True)  # Unique identifier for the asset assignment
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)  # Asset being assigned
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # User assigned to the asset
-    assignedTo = models.ForeignKey(Profile, on_delete=models.CASCADE)  # Profile of the user assigned to the asset
-    assignedDepartment = models.ForeignKey(Department, on_delete=models.CASCADE)  # Department to which the asset is assigned
-    dateAssigned = models.DateField(auto_now_add=True)  # Date when the asset was assigned
-    returnDate = models.DateField(null=True, blank=True)  # Expected return date
+    id = models.AutoField(primary_key=True)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    assignedTo = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    assignedDepartment = models.ForeignKey(Department, on_delete=models.CASCADE)
+    dateAssigned = models.DateField(auto_now_add=True)
+    returnDate = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.asset.name} assigned to {self.assignedTo.user.username}"
 
     class Meta:
-        db_table = 'asset_assignments'  # Table name for AssetAssignment model
+        db_table = 'asset_assignments'
