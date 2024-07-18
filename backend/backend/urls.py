@@ -4,7 +4,6 @@ from django.contrib import admin
 from django.urls import path, include
 from routers import router  # Import router from the root directory
 from assets.viewsets import RegisterView, LoginView,LogoutView,PasswordResetView
-from assets.tests import Test
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -13,6 +12,4 @@ urlpatterns = [
     path('api/auth/login/', LoginView.as_view(), name='login'),  # Add user login route
     path('api/auth/logout/', LogoutView.as_view(), name='logout'),
     path('api/auth/reset_password/', PasswordResetView.as_view(), name='reset_password'),
-
-    path('api/tests/', Test.as_view(), name="tests")
 ]
