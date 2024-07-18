@@ -14,7 +14,7 @@ export function RegistrationForm() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle className="text-2xl">Register</CardTitle>
+        <CardTitle className="text-5x1">Register</CardTitle>
         <CardDescription>
           Fill in the details below to create an account.
         </CardDescription>
