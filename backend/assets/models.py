@@ -58,7 +58,7 @@ class Profile(models.Model):
         return self.user.username  # Return username of associated user
 
     class Meta:
-        db_table = 'profiles'  # Table name for Profile model
+        db_table = 'profile'  # Table name for Profile model
 
 
 class Category(models.Model):
@@ -69,7 +69,7 @@ class Category(models.Model):
         return self.name  # Return category name
 
     class Meta:
-        db_table = 'categories'  # Table name for Category model
+        db_table = 'categorie'  # Table name for Category model
 
 
 class Tag(models.Model):
@@ -80,7 +80,7 @@ class Tag(models.Model):
         return self.name  # Return tag name
 
     class Meta:
-        db_table = 'tags'  # Table name for Tag model
+        db_table = 'tag'  # Table name for Tag model
 class Asset(models.Model):
     id = models.AutoField(primary_key=True)  # Unique identifier for the asset
     name = models.CharField(max_length=50)  # Name of the asset
@@ -97,7 +97,7 @@ class Asset(models.Model):
         return self.name  # Return asset name
 
     class Meta:
-        db_table = 'assets'  # Table name for Asset model
+        db_table = 'asset'  # Table name for Asset model
 
 
 class AssetTag(models.Model):
@@ -106,7 +106,7 @@ class AssetTag(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)  # Foreign key to Tag
 
     class Meta:
-        db_table = 'asset_tags'  # Table name for AssetTag model
+        db_table = 'assetTag'  # Table name for AssetTag model
         unique_together = ('asset', 'tag')  # Ensure unique asset-tag pairs
 
 
@@ -123,4 +123,4 @@ class AssetAssignment(models.Model):
         return f"{self.asset.name} assigned to {self.assignedTo.user.username}"
 
     class Meta:
-        db_table = 'asset_assignments'  # Table name for AssetAssignment model
+        db_table = 'assetAssignment'  # Table name for AssetAssignment model
