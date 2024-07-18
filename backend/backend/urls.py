@@ -4,6 +4,8 @@ from django.contrib import admin
 from django.urls import path, include
 from routers import router  # Import router from the root directory
 from assets.viewsets import CategoryViewSet, RegisterView, LoginView, LogoutView, PasswordResetView
+from assets.viewsets import RegisterView, LoginView,LogoutView,PasswordResetView
+from assets.tests import Test
 
 # Register CategoryViewSet with a unique basename, e.g., 'category-api'
 router.register(r'categories', CategoryViewSet, basename='category-api')
@@ -16,4 +18,8 @@ urlpatterns = [
     path('api/auth/login/', LoginView.as_view(), name='login'),  # Add user login route
     path('api/auth/logout/', LogoutView.as_view(), name='logout'),  # Add user logout route
     path('api/auth/reset_password/', PasswordResetView.as_view(), name='reset_password'),  # Add password reset route
+    path('api/auth/logout/', LogoutView.as_view(), name='logout'),
+    path('api/auth/reset_password/', PasswordResetView.as_view(), name='reset_password'),
+
+    path('api/tests/', Test.as_view(), name="tests")
 ]

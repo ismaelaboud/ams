@@ -90,10 +90,16 @@ AUTH_USER_MODEL = 'assets.CustomUser'
 
 # DRF and JWT settings
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+        # Other authentication classes if needed
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+        # Other permission classes if needed
+    ],
 }
+
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
