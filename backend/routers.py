@@ -4,6 +4,7 @@ from assets.viewsets import AssetViewSet, CategoryViewSet, TagViewSet
 # Initialize the default router
 router = routers.DefaultRouter()
 
+
 # Register the CategoryViewSet with the router
 router.register(r'categories', CategoryViewSet, basename='category')
 
