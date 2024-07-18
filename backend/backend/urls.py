@@ -1,11 +1,19 @@
 # backend/urls.py
 
+from webbrowser import get
 from django.contrib import admin
 from django.urls import path, include
+from assets import views
 from routers import router  # Import router from the root directory
+<<<<<<< HEAD
 from assets.viewsets import CategoryViewSet, RegisterView, LoginView, LogoutView, PasswordResetView
 from assets.viewsets import RegisterView, LoginView,LogoutView,PasswordResetView
 from assets.tests import Test
+=======
+from assets.viewsets import(
+ AssetDetailView, RegisterView, LoginView, LogoutView, PasswordResetView, AssetAssignmentViewSet
+)
+>>>>>>> backend
 
 # Register CategoryViewSet with a unique basename, e.g., 'category-api'
 router.register(r'categories', CategoryViewSet, basename='category-api')
@@ -16,10 +24,18 @@ urlpatterns = [
     path('api/', include(router.urls)),  # Include the API routes from the router
     path('api/auth/register/', RegisterView.as_view(), name='register'),  # Add user registration route
     path('api/auth/login/', LoginView.as_view(), name='login'),  # Add user login route
+<<<<<<< HEAD
     path('api/auth/logout/', LogoutView.as_view(), name='logout'),  # Add user logout route
     path('api/auth/reset_password/', PasswordResetView.as_view(), name='reset_password'),  # Add password reset route
     path('api/auth/logout/', LogoutView.as_view(), name='logout'),
     path('api/auth/reset_password/', PasswordResetView.as_view(), name='reset_password'),
 
     path('api/tests/', Test.as_view(), name="tests")
+=======
+    path('api/auth/logout/', LogoutView.as_view(), name='logout'),
+    path('api/auth/password_reset/', PasswordResetView.as_view(), name='password_reset'),
+     
+    # ================= Assets urls =================
+     path('api/assets/detail/<int:id>/', AssetDetailView.as_view(), name='asset_detail'),
+>>>>>>> backend
 ]
