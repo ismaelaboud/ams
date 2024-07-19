@@ -1,10 +1,20 @@
+"use client";
+
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LoginForm } from "@/components/login/auth/Login-Form";
+
 export default function Home() {
+  useEffect(() => {
+    redirect("/login");
+  }, []);
+
   return (
     <main className="grid place-items-center h-screen p-24">
-      <LoginForm />
-      <Button>Contribute</Button>
+      <Link href="/login">
+        <Button>Login First</Button>
+      </Link>
     </main>
   );
 }
