@@ -17,12 +17,12 @@ import {
 } from "@/components/ui/form";
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  username: z.string().min(2, { message: "Username must be at least 2 characters." }),
+  name: z.string().min(10, { message: "Name must be at least 10 characters." }),
+  username: z.string().min(10, { message: "Username must be at least 10 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
   confirmEmail: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-  confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+  confirmPassword: z.string().min(8, { message: "Password must be at least 8 characters." }),
 }).refine((data) => data.email === data.confirmEmail, {
   message: "Emails do not match",
   path: ["confirmEmail"],
@@ -52,7 +52,7 @@ const RegistrationForm: React.FC = () => {
 
   return (
     <div className="w-full p-4 max-w-sm">
-      <h2 className="text-2xl font-bold mb-4">Register</h2>
+      <h2 className="text-3xl font-bold mb-4">Register</h2>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">
           <FormField
