@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { RegistrationForm } from "@/components/Registration/RegistrationForm";
+import  RegistrationForm from "@/components/Registration/RegistrationForm";
 
 export default function Home() {
   return (
