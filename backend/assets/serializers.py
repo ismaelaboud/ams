@@ -2,6 +2,8 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser, Category, Tag, Asset
+from assets.serializers import CategorySerializer, TagSerializer, AssetSerializer, RegisterSerializer, LoginSerializer
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
