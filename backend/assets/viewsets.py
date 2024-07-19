@@ -8,10 +8,9 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from django.contrib.auth import authenticate
 from assets.models import Category, Profile, Tag, Asset, CustomUser, AssetAssignment
 from assets.serializers import(
-    CategorySerializer, TagSerializer, AssetSerializer, RegisterSerializer,
+    AssetWithCategorySerializer, CategorySerializer, ProfileSerializer, TagSerializer, AssetSerializer, RegisterSerializer,
     PasswordResetSerializer, AssetAssignmentSerializer, LoginSerializer
 )
 
@@ -42,11 +41,10 @@ class LoginView(APIView):
             refresh = RefreshToken.for_user(user)
             return Response({
                 "message": "Login successful",
-                "refresh": serializer.validated_data["refresh"],
-                "access": serializer.validated_data["access"]
+                "refresh": str(refresh),
+                "access": str(serializer.validated_data["access"])
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class LogoutView(APIView):
     """
@@ -89,7 +87,7 @@ class PasswordResetView(APIView):
                 return Response({"error": "Old password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# ================= Retriving and entering data to and from the Asset model ===========================
+# ================= Retrieving and entering data to and from the Asset model ===========================
 class AssetViewSet(viewsets.ModelViewSet):
     """
     Viewset for handling CRUD operations on Asset objects.
@@ -107,82 +105,82 @@ class AssetViewSet(viewsets.ModelViewSet):
             self.permission_classes = [IsAuthenticated]  # Requires authentication for other actions
 
         return super().get_permissions()
-
-class AssetCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+class AssetCategoryFilterViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Viewset for filtering assets where category equals to 'Furnitures'.
+    Viewset for retrieving assets filtered by category name and including count of the filtered data.
     """
-    serializer_class = AssetSerializer
+    serializer_class = AssetWithCategorySerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Asset.objects.filter(category='Furnitures')
-    
-class AssetCountView(viewsets.ViewSet):
+        """
+        This view returns a list of all assets filtered by the category name provided in the request.
+        """
+        category_name = self.request.query_params.get('category_name', None)
+
+        if category_name:
+            # Fetch assets where the category name matches the given name
+            return Asset.objects.filter(category__name=category_name)
+        return Asset.objects.all()  # Return all assets if no category name is provided
+
     def list(self, request, *args, **kwargs):
-        count = Asset.objects.filter(category__name='Furnitures').count()
-        return Response({'count': count})
-    
+        """
+        Override the default list method to include count information.
+        """
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+        
+        # Include the count of filtered assets
+        response_data = {
+            'count': queryset.count(),
+            'results': data
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
 
 # ============================== Manipulating a single asset in Asset model ===================================
 class AssetDetailView(APIView):
     def get(self, request, id):
-        try:
-            asset = Asset.objects.select_related('category', 'assignedDepartment').get(id=id)
-            data = {
-                'id': asset.id,
-                'category': {
-                    'id': asset.category.id,
-                    'name': asset.category.name
-                },
-                'name': asset.name,
-                'assetType': asset.assetType,
-                'description': asset.description,
-                'serialNumber': asset.serialNumber,
-                'dateRecorded': asset.dateRecorded.isoformat(),
-                'status': asset.status,
-                'assignedDepartment': asset.assignedDepartment.id
-            }
-            return Response(data, status=status.HTTP_200_OK)
-        except Asset.DoesNotExist:
-            return Response({"msg": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+        asset = get_object_or_404(Asset.objects.select_related('category', 'assignedDepartment'), id=id)
+        data = {
+            'id': asset.id,
+            'category': {
+                'id': asset.category.id,
+                'name': asset.category.name
+            },
+            'name': asset.name,
+            'assetType': asset.assetType,
+            'description': asset.description,
+            'serialNumber': asset.serialNumber,
+            'dateRecorded': asset.dateRecorded.isoformat(),
+            'status': asset.status,
+            'assignedDepartment': asset.assignedDepartment.id
+        }
+        return Response(data, status=status.HTTP_200_OK)
 
     def put(self, request, id):
-        try:
-            obj = Asset.objects.get(id=id)
-        except Asset.DoesNotExist:
-            msg = {"msg": "Not Found"}
-            return Response(msg, status=status.HTTP_404_NOT_FOUND)
-        serializer = AssetSerializer(obj, data=request.data)
+        asset = get_object_or_404(Asset, id=id)
+        serializer = AssetSerializer(asset, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_205_RESET_CONTENTS)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
    
     def patch(self, request, id):
-        try:
-            asset = Asset.objects.get(id=id)
-        except Asset.DoesNotExist:
-            msg = {"msg": "Asset not found"}
-            return Response(msg, status=status.HTTP_404_NOT_FOUND)
-        
+        asset = get_object_or_404(Asset, id=id)
         serializer = AssetSerializer(asset, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            msg = {"msg": "Updated successfully "}
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({"msg": "Updated successfully"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):
-        try:
-            obj = Asset.objects.get(id=id)
-            obj.delete()
-            return Response({"msg": "Deleted Successfully"}, status=status.HTTP_204_NO_CONTENT)
-        except Asset.DoesNotExist:
-            msg = {"msg": "Not Found"}
-            return Response(msg, status=status.HTTP_404_NOT_FOUND)
+        asset = get_object_or_404(Asset, id=id)
+        asset.delete()
+        return Response({"msg": "Deleted Successfully"}, status=status.HTTP_204_NO_CONTENT)
 
-# ===========================Assigning Asset to a partucular User ==============================           
-
+# ===========================Assigning Asset to a particular User ==============================           
 class AssetAssignmentViewSet(viewsets.ModelViewSet):
     queryset = AssetAssignment.objects.all()
     serializer_class = AssetAssignmentSerializer
@@ -208,3 +206,15 @@ class AssetAssignmentViewSet(viewsets.ModelViewSet):
         serializer = AssetSerializer(assets, many=True)
         return Response(serializer.data)
 
+# =================== User Profile =============================
+
+class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Profile.objects.select_related('user', 'department').all()
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.profile.role == Profile.ADMIN_ROLE:
+            return Profile.objects.select_related('user', 'department').all()
+        return Profile.objects.select_related('user', 'department').filter(user=user)

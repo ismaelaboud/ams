@@ -8,8 +8,12 @@ from assets.models import CustomUser, Category, Tag, Asset, Department, Profile,
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email']
-
+        fields = ['id', 'username', 'email', 'firstName', 'lastName', 'dateJoined']
+        extra_kwargs = {
+            'firstName': {'source': 'first_name'},
+            'lastName': {'source': 'last_name'},
+            'dateJoined': {'source': 'date_joined'},
+        }
 #========================== User Registration =======================
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -89,7 +93,7 @@ class PasswordResetSerializer(serializers.Serializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name']
+        fields = "__all__"
 
 # ====================== Asset Tagging ======================================
 class TagSerializer(serializers.ModelSerializer):
@@ -98,41 +102,36 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 # ===================== Assets Manipulations =================================
-class AssetSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
+from rest_framework import serializers
+from assets.models import Asset, Category
 
+class AssetSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+    
+    class Meta:
+        model = Asset
+        fields = '__all__'
+    
     class Meta:
         model = Asset
         fields = '__all__'
 
-    def create(self, validated_data):
-        category_data = validated_data.pop('category')
-        category_serializer = CategorySerializer(data=category_data)
-        
-        if category_serializer.is_valid():
-            category_instance = category_serializer.save()
-            asset = Asset.objects.create(category=category_instance, **validated_data)
-            return asset
-        else:
-            raise serializers.ValidationError("Category data is invalid.")
-        
-
 
 # ==================== User Profile ======================
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['name']
+
 class ProfileSerializer(serializers.ModelSerializer):
+    department = DepartmentSerializer(read_only=True)
+    user = UserSerializer(read_only=True)
+
     class Meta:
         model = Profile
-        fields = ['id', 'user', 'department']
-        read_only_fields = ['user', 'department', 'role',]  # 'user' and 'department' fields read-only
-
-    def create(self, validated_data):
-        return Profile.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.role = validated_data.get('role', instance.role)
-        instance.save()
-        return instance
-
+        fields = ['id', 'user', 'department', 'role']
+        read_only_fields = ['user', 'department', 'role'] 
 
 # ==================== Asset Assignment ======================
 class AssetAssignmentSerializer(serializers.ModelSerializer):
@@ -140,4 +139,10 @@ class AssetAssignmentSerializer(serializers.ModelSerializer):
         model = AssetAssignment
         fields = ['id', 'asset', 'user', 'assignedTo', 'assignedDepartment', 'returnDate']
 
+# ===================== Asset + Category =================
+class AssetWithCategorySerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
 
+    class Meta:
+        model = Asset
+        fields = '__all__'
