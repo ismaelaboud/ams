@@ -2,7 +2,8 @@ from django.urls import path
 from rest_framework import routers
 from assets import views
 from assets.viewsets import(
-   AssetAssignmentViewSet, AssetCategoryFilterViewSet, AssetTagViewSet, AssetViewSet,  UserProfileViewSet
+   AssetAssignmentViewSet, AssetCategoryFilterViewSet, AssetTagViewSet, AssetViewSet,
+       UserProfileViewSet
 )
 
 # Initialize the default router
