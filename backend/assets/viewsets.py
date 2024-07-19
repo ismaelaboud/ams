@@ -1,13 +1,20 @@
-# views.py
-from rest_framework import viewsets, status
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Category, Tag, Asset, CustomUser
-from .serializers import CategorySerializer, TagSerializer, AssetSerializer, RegisterSerializer, LoginSerializer, PasswordResetSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
+from assets.models import Category, Profile, Tag, Asset, CustomUser, AssetAssignment
+from assets.serializers import(
+    AssetWithCategorySerializer, CategorySerializer, ProfileSerializer, TagSerializer, AssetSerializer, RegisterSerializer,
+    PasswordResetSerializer, AssetAssignmentSerializer, LoginSerializer
+)
 
+# ============================== AUTHENTICATION MODULES =============================
 class RegisterView(APIView):
     """
     API view to register a new user.
@@ -28,9 +35,15 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
+            user = serializer.validated_data["user"]
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "message": "Login successful",
+                "refresh": str(refresh),
+                "access": str(serializer.validated_data["access"])
+            }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
@@ -74,22 +87,7 @@ class PasswordResetView(APIView):
                 return Response({"error": "Old password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for handling CRUD operations on Category objects.
-    """
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
-
-class TagViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for handling CRUD operations on Tag objects.
-    """
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-    permission_classes = [IsAuthenticated]
-
+# ================= Retrieving and entering data to and from the Asset model ===========================
 class AssetViewSet(viewsets.ModelViewSet):
     """
     Viewset for handling CRUD operations on Asset objects.
@@ -101,14 +99,122 @@ class AssetViewSet(viewsets.ModelViewSet):
         """
         Custom method to determine permissions based on the request method.
         """
-        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            return [IsAdminUser()]  # Requires admin permission for write operations
+        if self.request.method in ['POST']:
+            self.permission_classes = [IsAdminUser]  # Requires admin permission for write operations
         else:
-            return [IsAuthenticated()]  # Requires authentication for other actions
+            self.permission_classes = [IsAuthenticated]  # Requires authentication for other actions
 
-    def perform_update(self, serializer):
+        return super().get_permissions()
+class AssetCategoryFilterViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Viewset for retrieving assets filtered by category name and including count of the filtered data.
+    """
+    serializer_class = AssetWithCategorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
         """
-        Custom method to perform update operations.
+        This view returns a list of all assets filtered by the category name provided in the request.
         """
+        category_name = self.request.query_params.get('category_name', None)
+
+        if category_name:
+            # Fetch assets where the category name matches the given name
+            return Asset.objects.filter(category__name=category_name)
+        return Asset.objects.all()  # Return all assets if no category name is provided
+
+    def list(self, request, *args, **kwargs):
+        """
+        Override the default list method to include count information.
+        """
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+        
+        # Include the count of filtered assets
+        response_data = {
+            'count': queryset.count(),
+            'results': data
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+
+# ============================== Manipulating a single asset in Asset model ===================================
+class AssetDetailView(APIView):
+    def get(self, request, id):
+        asset = get_object_or_404(Asset.objects.select_related('category', 'assignedDepartment'), id=id)
+        data = {
+            'id': asset.id,
+            'category': {
+                'id': asset.category.id,
+                'name': asset.category.name
+            },
+            'name': asset.name,
+            'assetType': asset.assetType,
+            'description': asset.description,
+            'serialNumber': asset.serialNumber,
+            'dateRecorded': asset.dateRecorded.isoformat(),
+            'status': asset.status,
+            'assignedDepartment': asset.assignedDepartment.id
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def put(self, request, id):
+        asset = get_object_or_404(Asset, id=id)
+        serializer = AssetSerializer(asset, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+   
+    def patch(self, request, id):
+        asset = get_object_or_404(Asset, id=id)
+        serializer = AssetSerializer(asset, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"msg": "Updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        asset = get_object_or_404(Asset, id=id)
+        asset.delete()
+        return Response({"msg": "Deleted Successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+# ===========================Assigning Asset to a particular User ==============================           
+class AssetAssignmentViewSet(viewsets.ModelViewSet):
+    queryset = AssetAssignment.objects.all()
+    serializer_class = AssetAssignmentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        asset = serializer.validated_data['asset']
+        asset.status = 'Booked'
+        asset.save()
         serializer.save()
 
+    def create(self, request, *args, **kwargs):
+        if request.user.is_anonymous or not hasattr(request.user, 'profile'):
+            raise PermissionDenied("Only authenticated admins can assign assets.")
+        if not request.user.profile.role == Profile.ADMIN_ROLE:
+            return Response({"detail": "Only admins can assign assets."}, status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='user-assets/(?P<user_id>[^/.]+)')
+    def get_assets_by_user(self, request, user_id=None):
+        assignments = AssetAssignment.objects.filter(user_id=user_id)
+        assets = [assignment.asset for assignment in assignments]
+        serializer = AssetSerializer(assets, many=True)
+        return Response(serializer.data)
+
+# =================== User Profile =============================
+
+class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Profile.objects.select_related('user', 'department').all()
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.profile.role == Profile.ADMIN_ROLE:
+            return Profile.objects.select_related('user', 'department').all()
+        return Profile.objects.select_related('user', 'department').filter(user=user)
