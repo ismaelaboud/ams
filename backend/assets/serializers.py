@@ -3,7 +3,6 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
 from assets.models import CustomUser, Category, Tag, Asset, Department, Profile, AssetAssignment
-
 # ====================== Customer User Model =======================
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,6 +14,35 @@ class UserSerializer(serializers.ModelSerializer):
             'dateJoined': {'source': 'date_joined'},
         }
 #========================== User Registration =======================
+        fields = ['id', 'username', 'email']
+
+# Serializer for the Category model
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
+# Serializer for the Tag model
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'name']
+
+# Serializer for the Asset model
+class AssetSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    tags = TagSerializer(many=True)
+    assigned_to = UserSerializer()
+
+    class Meta:
+        model = Asset
+        fields = [
+            'id', 'name', 'asset_type', 'description',
+            'serial_number', 'category', 'tags', 'assigned_to', 
+            'assigned_department'
+        ]
+
+# Serializer for user registration
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
@@ -28,7 +56,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             'email': {'required': True},
             'username': {'required': True},
         }
-
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
@@ -45,7 +72,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-#==================== User login =============================
+
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)

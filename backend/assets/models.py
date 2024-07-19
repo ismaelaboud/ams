@@ -77,7 +77,6 @@ class Profile(models.Model):
     class Meta:
         db_table = 'profiles'
 
-
 class Category(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
@@ -86,7 +85,7 @@ class Category(models.Model):
         return self.name
 
     class Meta:
-        db_table = 'categories'
+        db_table = 'categories'  # Table name for Category model
 
 
 @receiver(post_migrate)
@@ -109,7 +108,7 @@ class Tag(models.Model):
         return self.name
 
     class Meta:
-        db_table = 'tags'
+        db_table = 'tags'        
 
 
 class Asset(models.Model):
@@ -138,6 +137,7 @@ class Asset(models.Model):
         db_table = 'assets'
 
 
+
 class AssetTag(models.Model):
     id = models.AutoField(primary_key=True)
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
@@ -146,6 +146,7 @@ class AssetTag(models.Model):
     class Meta:
         db_table = 'asset_tags'
         unique_together = ('asset', 'tag')
+
 
 
 class AssetAssignment(models.Model):
@@ -161,4 +162,5 @@ class AssetAssignment(models.Model):
         return f"{self.asset.name} assigned to {self.assignedTo.user.username}"
 
     class Meta:
-        db_table = 'asset_assignments'
+        db_table = 'assetAssignment'  # Table name for AssetAssignment model
+
