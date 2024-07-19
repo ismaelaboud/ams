@@ -1,11 +1,12 @@
-import { LoginForm } from "@/components/login/auth/Login-Form";
+import LoginForm from "@/components/auth/Login-Form";
 
-export default async function Login() {
-    return (
-        <main className="grid place-items-center h-screen">
-            <LoginForm />
-        </main>
-        
-    )
-   
+export default function Login() {
+  return (
+    <>
+      <main>
+        <LoginForm />
+      </main>
+    </>
+  );
 }
+
