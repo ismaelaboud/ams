@@ -75,12 +75,7 @@ class Profile(models.Model):
         return self.user.username
 
     class Meta:
-<<<<<<< HEAD
-        db_table = 'profile'  # Table name for Profile model
-=======
         db_table = 'profiles'
->>>>>>> backend
-
 
 class Category(models.Model):
     id = models.AutoField(primary_key=True)
@@ -90,10 +85,7 @@ class Category(models.Model):
         return self.name
 
     class Meta:
-<<<<<<< HEAD
-        db_table = 'categorie'  # Table name for Category model
-=======
-        db_table = 'categories'
+        db_table = 'categories'  # Table name for Category model
 
 
 @receiver(post_migrate)
@@ -106,7 +98,6 @@ def create_default_categories(sender, **kwargs):
         ]
         for category_name in default_categories:
             Category.objects.get_or_create(name=category_name)
->>>>>>> backend
 
 
 class Tag(models.Model):
@@ -117,13 +108,9 @@ class Tag(models.Model):
         return self.name
 
     class Meta:
-<<<<<<< HEAD
-        db_table = 'tag'  # Table name for Tag model
-=======
-        db_table = 'tags'
+        db_table = 'tags'        
 
 
->>>>>>> backend
 class Asset(models.Model):
     STATUS_CHOICES = [
         ('Available', 'Available'),
@@ -147,11 +134,8 @@ class Asset(models.Model):
         return self.name
 
     class Meta:
-<<<<<<< HEAD
-        db_table = 'asset'  # Table name for Asset model
-=======
         db_table = 'assets'
->>>>>>> backend
+
 
 
 class AssetTag(models.Model):
@@ -160,13 +144,9 @@ class AssetTag(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
 
     class Meta:
-<<<<<<< HEAD
-        db_table = 'assetTag'  # Table name for AssetTag model
-        unique_together = ('asset', 'tag')  # Ensure unique asset-tag pairs
-=======
         db_table = 'asset_tags'
         unique_together = ('asset', 'tag')
->>>>>>> backend
+
 
 
 class AssetAssignment(models.Model):
@@ -182,8 +162,5 @@ class AssetAssignment(models.Model):
         return f"{self.asset.name} assigned to {self.assignedTo.user.username}"
 
     class Meta:
-<<<<<<< HEAD
         db_table = 'assetAssignment'  # Table name for AssetAssignment model
-=======
-        db_table = 'asset_assignments'
->>>>>>> backend
+

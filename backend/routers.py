@@ -1,33 +1,21 @@
-<<<<<<< HEAD
-# routers.py
-from rest_framework import routers
-from assets.viewsets import AssetViewSet, CategoryViewSet, TagViewSet, AssetTagViewSet
-from assets.viewsets import AssetViewSet, CategoryViewSet, TagViewSet
-=======
 from django.urls import path
 from rest_framework import routers
 from assets import views
 from assets.viewsets import(
-   AssetAssignmentViewSet, AssetViewSet,  AssetCountView
+   AssetAssignmentViewSet, AssetCategoryFilterViewSet, AssetTagViewSet, AssetViewSet,  UserProfileViewSet
 )
 
->>>>>>> backend
 # Initialize the default router
 router = routers.DefaultRouter()
 
+# =============== User Profile ===========================
+router.register(r'user-profiles', UserProfileViewSet, basename='user-profile')
 
 # =============== Asset Routers ===========================
 # all assets
 router.register(r'assets', AssetViewSet, basename='asset')
-<<<<<<< HEAD
+#all assets where category is Furnitures
+router.register(r'assets-by-category', AssetCategoryFilterViewSet, basename='asset-category-filter')
 # Register the AssetTagViewSet with the router
 router.register(r'asset-tags', AssetTagViewSet, basename='asset-tag')
-=======
-#all assets where category is Furnitures
-router.register(r'furnitures', AssetViewSet, basename='furnitures')
-# count the number of assets filterered by category
-router.register(r'assets/count', AssetCountView, basename='asset-count')
 router.register(r'asset-assignments', AssetAssignmentViewSet, basename='asset-assignment')
-
-
->>>>>>> backend
