@@ -6,7 +6,7 @@ from assets import views
 from routers import router  # Import router from the root directory
 from assets.tests import Test
 from assets.viewsets import(
- AssetDetailView, RegisterView, LoginView, LogoutView, PasswordResetView, AssetAssignmentViewSet
+ AssetDetailView, ProfileUpdateView, RegisterView, LoginView, LogoutView, PasswordResetView, AssetAssignmentViewSet
 )
 # Define your urlpatterns
 urlpatterns = [
@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/auth/login/', LoginView.as_view(), name='login'),
     path('api/auth/logout/', LogoutView.as_view(), name='logout'),
     path('api/auth/reset_password/', PasswordResetView.as_view(), name='reset_password'),
+    path('api/profile/update/', ProfileUpdateView.as_view(), name='profile-update'),
     path('api/tests/', Test.as_view(), name="tests"),
     path('api/assets/detail/<int:id>/', AssetDetailView.as_view(), name='asset_detail'),
 ]
