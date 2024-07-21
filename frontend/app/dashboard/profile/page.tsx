@@ -3,10 +3,12 @@ import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import ProfileDetails from "@/components/dashboard/profile";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default async function Profile() {
   return (
-    <>
+    <ScrollArea className="h-full">
       <div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
         <div className="flex items-start justify-between">
           <div>
@@ -23,8 +25,8 @@ export default async function Profile() {
           </Link>
         </div>
         <Separator />
-        <p>Loggedin user profile to go here</p>
+        <ProfileDetails />
       </div>
-    </>
+    </ScrollArea>
   );
 }
