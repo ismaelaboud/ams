@@ -175,7 +175,7 @@ class AssetCategoryFilterViewSet(viewsets.ReadOnlyModelViewSet):
 
 class AssetDetailView(APIView):
     def get(self, request, id):
-        asset = get_object_or_404(Asset.objects.select_related('category', 'assigned_department'), id=id)
+        asset = get_object_or_404(Asset.objects.select_related('category', 'assignedDepartment'), id=id)
         serializer = AssetWithCategorySerializer(asset)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

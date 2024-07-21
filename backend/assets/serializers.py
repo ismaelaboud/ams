@@ -10,31 +10,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['id', 'username', 'email', 'firstName', 'lastName', 'date_joined']
 
-# Serializer for the Category model
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name']
-
-# Serializer for the Tag model
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = ['id', 'name']
-
-# Serializer for the Asset model
-class AssetSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
-    tags = TagSerializer(many=True)
-    assignedTo = UserSerializer()
-
-    class Meta:
-        model = Asset
-        fields = [
-            'id', 'name', 'assetType', 'description',
-            'serialNumber', 'category', 'tags', 'assignedTo', 
-            'assignedDepartment'
-        ]
 
 # ========================== USER MANAGEMENT SERIALIZERS MODULES =============================
 # Serializer for user registration
@@ -219,6 +194,25 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+# Serializer for the Category model
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
+# Serializer for the Tag model
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'name']
+
+# Serializer for the Asset model
+class AssetSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+
+    class Meta:
+        model = Asset
+        fields = '__all__'
 
 # ===================== Asset Assignment ======================
 class AssetAssignmentSerializer(serializers.ModelSerializer):
