@@ -97,6 +97,12 @@ export default function LoginForm() {
             <Button type="submit" className="w-full">
               Login
             </Button>
+            <p className="text-muted-foreground text-sm mt-2">
+              Don&apos;t have an account?{" "}
+              <Link href="/register" className="text-primary">
+                Register
+              </Link>
+            </p>
           </form>
         </Form>
       </div>
