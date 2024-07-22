@@ -15,7 +15,6 @@ export default function Home() {
       <Link href="/login">
         <Button>Login First</Button>
       </Link>
-      <Button>Contribute</Button>
     </main>
   );
 }
