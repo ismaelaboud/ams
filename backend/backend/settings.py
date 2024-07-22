@@ -150,6 +150,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'developerantony98@gmail.com'
 EMAIL_HOST_PASSWORD = 'ejid tsyb acow emcs'
+DEFAULT_FROM_EMAIL = 'noreply@gmail.com'
 
 # =========================== CONFIGURING SEND EMAIL TEMPLATES ===========================================
 

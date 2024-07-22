@@ -20,7 +20,6 @@ from assets.serializers import (
 )
 
 # ============================== AUTHENTICATION MODULES =============================
-
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -29,7 +28,18 @@ class RegisterView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Combine errors into one message
+        errors = serializer.errors
+        combined_errors = []
+        if 'email' in errors:
+            combined_errors.append("User with that email already exists.")
+        if 'username' in errors:
+            combined_errors.append("User with that username already exists.")
+        if 'password' in errors:
+            combined_errors.append(errors['password'][0])
+
+        return Response({"message": " ".join(combined_errors)}, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -42,7 +52,11 @@ class LoginView(APIView):
                 "refresh": serializer.validated_data["refresh"],
                 "access": serializer.validated_data["access"]
             }, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Return a clean error message
+        return Response({
+            "message": "Invalid login credentials"
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -105,9 +119,9 @@ class PasswordResetView(viewsets.ViewSet):
         email_plaintext_message = render_to_string('email/password_reset_email.txt', context)
 
         msg = EmailMultiAlternatives(
-            subject="Password Reset for Your Website Title",
+            subject="Password Reset for Your SPH Asset Management Account",
             body=email_plaintext_message,
-            from_email="your-email@example.com",
+            from_email="noreply@gmail.com",
             to=[user.email]
         )
         msg.attach_alternative(email_html_message, "text/html")

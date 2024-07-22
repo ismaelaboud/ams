@@ -187,6 +187,10 @@ Symbols:
 ├── backend                       # Backend directory
 │   ├── api_doc.md                # API documentation Markdown file
 │   ├── assets                    # App for managing assets
+|   |   ├── templates
+|   |   |   ├── email
+|   |   |   |   ├── password_reset_email.html
+|   |   |   |   ├── password_reset_email.txt                   
 │   │   ├── __init__.py
 │   │   ├── __pycache__           # Cached Python bytecode
 │   │   │   ├── __init__.cpython-311.pyc
