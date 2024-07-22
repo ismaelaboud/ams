@@ -1,5 +1,6 @@
 # backend/settings.py
 
+import os
 from pathlib import Path
 from datetime import timedelta
 
@@ -26,6 +27,7 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework_simplejwt.token_blacklist',
     'assets',
+    'django_rest_passwordreset',
 ]
 
 MIDDLEWARE = [
@@ -90,19 +92,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom user model
 AUTH_USER_MODEL = 'assets.CustomUser'
 
-# DRF and JWT settings
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-}
-
-# CORS settings
+# ============================== CONFIGURING COR HEADERS TO RESTRICT HOST ACCESS =================
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5000",
     "http://localhost:8000",
     # "http://95cc-197-237-236-78.ngrok-free.app",  # Add your domain here
 ]
+
+
+# =============================== JWF SETTINGS CONFIGURATION =======================================
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 
 # JWT settings
 SIMPLE_JWT = {
@@ -135,3 +138,34 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=120),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+
+
+# ============================ EMAILS AND PASSWORD RESET FRAMWORK SETTINGS =============================
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'developerantony98@gmail.com'
+EMAIL_HOST_PASSWORD = 'ejid tsyb acow emcs'
+DEFAULT_FROM_EMAIL = 'noreply@gmail.com'
+
+# =========================== CONFIGURING SEND EMAIL TEMPLATES ===========================================
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
