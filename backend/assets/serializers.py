@@ -1,317 +1,201 @@
-from django.contrib.auth import authenticate, get_user_model
-from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.password_validation import validate_password
-from assets.models import CustomUser, Category, Tag, Asset, Department, Profile, AssetAssignment
+from django.contrib.auth import authenticate, get_user_model  # Import authentication and user model utilities
+from rest_framework import serializers  # Import serializers from Django REST Framework
+from rest_framework_simplejwt.tokens import RefreshToken  # Import RefreshToken for JWT
+from django.contrib.auth.password_validation import validate_password  # Import password validation
+from assets.models import CustomUser, Category, Tag, Asset, Department, Profile, AssetAssignment  # Import models
 
 # ====================== Custom User Serializer =======================
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):  # Define UserSerializer for CustomUser model
     """
     Serializer for the CustomUser model to handle user data.
     """
     class Meta:
-        model = CustomUser
-        fields = ['id', 'username', 'email', 'firstName', 'lastName', 'date_joined']
-
+        model = CustomUser  # Specify model
+        fields = ['id', 'username', 'email', 'firstName', 'lastName', 'date_joined']  # Define fields to serialize
 
 # ========================== USER MANAGEMENT SERIALIZERS MODULES =============================
 # Serializer for user registration
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer):  # Define RegisterSerializer for user registration
     """
     Serializer for registering a new user.
     """
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    password2 = serializers.CharField(write_only=True, required=True)
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])  # Password field with validation
+    password2 = serializers.CharField(write_only=True, required=True)  # Confirm password field
 
     class Meta:
-        model = CustomUser
-        fields = ['firstName', 'lastName', 'email', 'username', 'password', 'password2']
+        model = CustomUser  # Specify model
+        fields = ['firstName', 'lastName', 'email', 'username', 'password', 'password2']  # Define fields to serialize
 
-    def validate(self, attrs):
+    def validate(self, attrs):  # Validate registration data
         """
         Validate that password and password2 match and check for unique email and username.
         """
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
-        
-        if CustomUser.objects.filter(email=attrs['email']).exists():
-            raise serializers.ValidationError({"email": "User with that email already exists."})
-        
-        if CustomUser.objects.filter(username=attrs['username']).exists():
-            raise serializers.ValidationError({"username": "User with that username already exists."})
-        
-        return attrs
+        if attrs['password'] != attrs['password2']:  # Check if passwords match
+            raise serializers.ValidationError({"password": "Password fields didn't match."})  # Raise error if not
 
-    def create(self, validated_data):
+        if CustomUser.objects.filter(email=attrs['email']).exists():  # Check if email is unique
+            raise serializers.ValidationError({"email": "User with that email already exists."})  # Raise error if not
+
+        if CustomUser.objects.filter(username=attrs['username']).exists():  # Check if username is unique
+            raise serializers.ValidationError({"username": "User with that username already exists."})  # Raise error if not
+
+        return attrs  # Return validated data
+
+    def create(self, validated_data):  # Create a new user
         """
         Create a new user with the validated data.
         """
-        validated_data.pop('password2')
-        user = CustomUser.objects.create(
+        validated_data.pop('password2')  # Remove password2 from validated data
+        user = CustomUser.objects.create(  # Create user instance
             firstName=validated_data['firstName'],
             lastName=validated_data['lastName'],
             email=validated_data['email'],
             username=validated_data['username']
         )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
+        user.set_password(validated_data['password'])  # Set the user's password
+        user.save()  # Save the user instance
+        return user  # Return created user
 
-    def to_representation(self, instance):
+    def to_representation(self, instance):  # Customize the representation of the user data
         """
         Customize the representation of the user data, excluding the password fields.
         """
-        response = super().to_representation(instance)
+        response = super().to_representation(instance)  # Get the default representation
         response.pop('password', None)  # Remove password from response
         response.pop('password2', None)  # Remove password2 from response
-        return response
+        return response  # Return modified representation
 
 # Serializer for user login
-class LoginSerializer(serializers.Serializer):
+class LoginSerializer(serializers.Serializer):  # Define LoginSerializer for user login
     """
     Serializer for user login.
     """
-    usernameOrEmail = serializers.CharField()
-    password = serializers.CharField(write_only=True)
-    access = serializers.CharField(read_only=True)
-    refresh = serializers.CharField(read_only=True)
+    usernameOrEmail = serializers.CharField()  # Field for username or email
+    password = serializers.CharField(write_only=True)  # Field for password
+    access = serializers.CharField(read_only=True)  # Field for access token
+    refresh = serializers.CharField(read_only=True)  # Field for refresh token
 
-    def validate(self, attrs):
+    def validate(self, attrs):  # Validate login credentials
         """
         Validate login credentials and generate JWT tokens.
         """
-        usernameOrEmail = attrs.get('usernameOrEmail')
-        password = attrs.get('password')
+        usernameOrEmail = attrs.get('usernameOrEmail')  # Get username or email
+        password = attrs.get('password')  # Get password
 
-        if not usernameOrEmail or not password:
-            raise serializers.ValidationError("Username/Email and password are required")
+        if not usernameOrEmail or not password:  # Check if both fields are provided
+            raise serializers.ValidationError("Username/Email and password are required")  # Raise error if not
 
         # Try to authenticate with the username_or_email as username first
-        user = authenticate(username=usernameOrEmail, password=password)
+        user = authenticate(username=usernameOrEmail, password=password)  # Authenticate with username
 
-        if user is None:
-            # If authentication with username fails, try with email
+        if user is None:  # If authentication fails, try with email
             try:
-                user_obj = CustomUser.objects.get(email=usernameOrEmail)
-                user = authenticate(username=user_obj.username, password=password)
-            except CustomUser.DoesNotExist:
-                raise serializers.ValidationError("Invalid login credentials")
+                user_obj = CustomUser.objects.get(email=usernameOrEmail)  # Get user by email
+                user = authenticate(username=user_obj.username, password=password)  # Authenticate with username from user object
+            except CustomUser.DoesNotExist:  # If user does not exist
+                raise serializers.ValidationError("Invalid login credentials")  # Raise error for invalid credentials
 
-        if user is None:
-            raise serializers.ValidationError("Invalid login credentials")
+        if user is None:  # If user is still None
+            raise serializers.ValidationError("Invalid login credentials")  # Raise error for invalid credentials
 
-        refresh = RefreshToken.for_user(user)
-        attrs['refresh'] = str(refresh)
-        attrs['access'] = str(refresh.access_token)
-        attrs['user'] = user
+        refresh = RefreshToken.for_user(user)  # Generate refresh token for the user
+        attrs['refresh'] = str(refresh)  # Add refresh token to attributes
+        attrs['access'] = str(refresh.access_token)  # Add access token to attributes
+        attrs['user'] = user  # Add user to attributes
 
-        return attrs
+        return attrs  # Return validated data
 
 # ===================== User Changing password ===============================
-class PasswordChangeSerializer(serializers.Serializer):
+class PasswordChangeSerializer(serializers.Serializer):  # Define PasswordChangeSerializer for changing passwords
     """
     Serializer for changing user password.
     """
-    oldPassword = serializers.CharField(write_only=True)
-    newPassword = serializers.CharField(write_only=True)
-    newPasswordConfirm = serializers.CharField(write_only=True)
+    oldPassword = serializers.CharField(write_only=True)  # Field for old password
+    newPassword = serializers.CharField(write_only=True)  # Field for new password
+    newPasswordConfirm = serializers.CharField(write_only=True)  # Field for new password confirmation
 
-    def validate(self, data):
+    def validate(self, data):  # Validate the new passwords
         """
         Validate that new passwords match.
         """
-        if data['newPassword'] != data['newPasswordConfirm']:
-            raise serializers.ValidationError("New passwords do not match")
-        return data
+        if data['newPassword'] != data['newPasswordConfirm']:  # Check if new passwords match
+            raise serializers.ValidationError("New passwords do not match")  # Raise error if not
 
-    def validate_oldPassword(self, value):
+        return data  # Return validated data
+
+    def validate_oldPassword(self, value):  # Validate the old password
         """
         Validate that the old password is correct.
         """
-        user = self.context['request'].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("Old password is incorrect")
-        return value
+        user = self.context['request'].user  # Get the user from request context
+        if not user.check_password(value):  # Check if old password is correct
+            raise serializers.ValidationError("Old password is incorrect")  # Raise error if not
+
+        return value  # Return validated old password
 
 # ================= Reseting user password by sending reset token to email =================
-class PasswordResetRequestSerializer(serializers.Serializer):
+class PasswordResetRequestSerializer(serializers.Serializer):  # Define PasswordResetRequestSerializer for password reset requests
     """
     Serializer for requesting a password reset via email.
     """
-    email = serializers.EmailField()
+    email = serializers.EmailField()  # Field for email address
 
-    def validate_email(self, value):
+    def validate_email(self, value):  # Validate the email address
         """
         Validate that the email exists in the system.
         """
-        if not CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError("There is no user registered with this email address.")
-        return value
+        if not CustomUser.objects.filter(email=value).exists():  # Check if email exists
+            raise serializers.ValidationError("There is no user registered with this email address.")  # Raise error if not
+
+        return value  # Return validated email address
 
 # ================ Confirm password reset =============================
-class PasswordResetConfirmSerializer(serializers.Serializer):
+class PasswordResetConfirmSerializer(serializers.Serializer):  # Define PasswordResetConfirmSerializer for confirming password reset
     """
     Serializer for confirming password reset with a token.
     """
-    uidb64 = serializers.CharField()
-    token = serializers.CharField()
-    new_password = serializers.CharField(max_length=128, write_only=True)
-    confirm_new_password = serializers.CharField(max_length=128, write_only=True)
+    uidb64 = serializers.CharField()  # Field for UID
+    token = serializers.CharField()  # Field for token
+    new_password = serializers.CharField(max_length=128, write_only=True)  # Field for new password
+    confirm_new_password = serializers.CharField(max_length=128, write_only=True)  # Field for new password confirmation
 
-    def validate(self, attrs):
+    def validate(self, attrs):  # Validate the reset data
         """
         Validate that new passwords match.
         """
-        new_password = attrs.get('new_password')
-        confirm_new_password = attrs.get('confirm_new_password')
+        new_password = attrs.get('new_password')  # Get new password
+        confirm_new_password = attrs.get('confirm_new_password')  # Get confirm new password
 
-        if new_password != confirm_new_password:
-            raise serializers.ValidationError("Passwords do not match.")
-        
-        return attrs
+        if new_password != confirm_new_password:  # Check if new passwords match
+            raise serializers.ValidationError("Passwords do not match.")  # Raise error if not
+
+        return attrs  # Return validated data
 
 # ==================== User Profile ======================
-class DepartmentSerializer(serializers.ModelSerializer):
+class DepartmentSerializer(serializers.ModelSerializer):  # Define DepartmentSerializer for Department model
     """
     Serializer for the Department model.
     """
     class Meta:
-        model = Department
-        fields = ['name']
+        model = Department  # Specify model
+        fields = ['name']  # Define fields to serialize
 
-class ProfileSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):  # Define ProfileSerializer for Profile model
     """
     Serializer for the Profile model.
     """
-    department = DepartmentSerializer(read_only=True)
-    user = UserSerializer(read_only=True)
+    department = DepartmentSerializer(read_only=True)  # Use DepartmentSerializer for department field
+    user = UserSerializer(read_only=True)  # Use UserSerializer for user field
 
     class Meta:
-        model = Profile
-        fields = ['id', 'user', 'department', 'role']
-        read_only_fields = ['user', 'department', 'role']
+        model = Profile  # Specify model
+        fields = ['id', 'user', 'department', 'role']  # Define fields to serialize
+        read_only_fields = ['user', 'department', 'role']  # Define read-only fields
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):  # Define CustomUserSerializer with optional fields
     """
     Serializer for the CustomUser model with optional fields.
     """
     class Meta:
-        model = CustomUser
-        fields = ['id', 'username', 'email', 'firstName', 'lastName', 'date_joined']
-        extra_kwargs = {
-            'username': {'required': False},
-            'email': {'required': False},
-        }
-
-class ProfileUpdateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for updating user profile information.
-    """
-    user = CustomUserSerializer(partial=True)  # Allow partial updates on user
-    department = DepartmentSerializer()
-
-    class Meta:
-        model = Profile
-        fields = ['user', 'department', 'role']
-
-    def validate(self, data):
-        """
-        Validate username and email uniqueness if provided.
-        """
-        user_data = data.get('user', {})
-        username = user_data.get('username', None)
-        email = user_data.get('email', None)
-
-        # Check for unique username
-        if username:
-            if CustomUser.objects.exclude(id=self.instance.user.id).filter(username=username).exists():
-                raise serializers.ValidationError({
-                    'user': {
-                        'username': 'A user with that username already exists.'
-                    }
-                })
-
-        # Check for unique email
-        if email:
-            if CustomUser.objects.exclude(id=self.instance.user.id).filter(email=email).exists():
-                raise serializers.ValidationError({
-                    'user': {
-                        'email': 'A user with this email already exists.'
-                    }
-                })
-
-        return data
-
-    def update(self, instance, validated_data):
-        """
-        Update profile and user information.
-        """
-        user_data = validated_data.pop('user', None)
-        department_data = validated_data.pop('department', None)
-
-        # Update Profile fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        
-        if user_data:
-            user = instance.user
-            for attr, value in user_data.items():
-                if value is not None:  # Only update if value is provided
-                    setattr(user, attr, value)
-            user.save()
-
-        if department_data:
-            department, created = Department.objects.get_or_create(**department_data)
-            instance.department = department
-
-        instance.save()
-        return instance
-
-# Serializer for the Category model
-class CategorySerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Category model.
-    """
-    class Meta:
-        model = Category
-        fields = ['id', 'name']
-
-# Serializer for the Tag model
-class TagSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Tag model.
-    """
-    class Meta:
-        model = Tag
-        fields = ['id', 'name']
-
-# Serializer for the Asset model
-class AssetSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Asset model.
-    """
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
-
-    class Meta:
-        model = Asset
-        fields = '__all__'
-
-# ===================== Asset Assignment ======================
-class AssetAssignmentSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the AssetAssignment model.
-    """
-    class Meta:
-        model = AssetAssignment
-        fields = ['id', 'asset', 'user', 'assignedTo', 'assignedDepartment', 'returnDate']
-
-# ===================== Asset With Category =================
-class AssetWithCategorySerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Asset model with category data.
-    """
-    category = CategorySerializer()
-
-    class Meta:
-        model = Asset
-        fields = '__all__'
+        model = CustomUser  # Specify model
+        fields = ['id', 'username', 'email', 'firstName', 'lastName', 'date_joined']  #
