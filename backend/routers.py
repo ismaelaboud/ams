@@ -9,9 +9,6 @@ from assets.viewsets import(
 # Initialize the default router
 router = routers.DefaultRouter()
 
-# =============== User Profile ===========================
-router.register(r'user_profiles', UserProfileViewSet, basename='user-profile')
-
 
 # =============== Asset Routers ===========================
 # all assets

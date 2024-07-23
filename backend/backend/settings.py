@@ -30,7 +30,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Update ALLOWED_HOSTS with the domains you want to allow
-ALLOWED_HOSTS = ['*',"*"]
+ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'https://localhost:8000',
@@ -139,8 +139,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),  # Access token lifetime
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Refresh token lifetime
+    'ACCESS_TOKEN_LIFETIME': timedelta(weeks=4),  # Access token lifetime
+    'REFRESH_TOKEN_LIFETIME': timedelta(weeks=4),  # Refresh token lifetime
     'ROTATE_REFRESH_TOKENS': False,  # Rotate refresh tokens setting
     'BLACKLIST_AFTER_ROTATION': True,  # Blacklist after rotation setting
     'UPDATE_LAST_LOGIN': False,  # Update last login setting
@@ -161,8 +161,8 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',  # Token type claim
     'JTI_CLAIM': 'jti',  # JTI claim
     'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',  # Sliding token refresh expiration claim
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=120),  # Sliding token lifetime
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),  # Sliding token refresh lifetime
+    'SLIDING_TOKEN_LIFETIME': timedelta(weeks=4),  # Sliding token lifetime
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(weeks=4),  # Sliding token refresh lifetime
 }
 
 # Email backend settings

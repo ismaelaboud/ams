@@ -35,7 +35,7 @@ class CustomUser(AbstractUser):
 # Model representing a department
 class Department(models.Model):
     id = models.AutoField(primary_key=True)  # Auto-incrementing primary key
-    name = models.CharField(max_length=50)  # Name of the department
+    name = models.CharField(max_length=50, unique=True)  # Name of the department
 
     def __str__(self):
         return self.name  # String representation of the department
@@ -77,7 +77,8 @@ class Profile(models.Model):
     id = models.AutoField(primary_key=True)  # Auto-incrementing primary key
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)  # One-to-one relationship with CustomUser
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, default=USER_ROLE)  # Role field with choices
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)  # Foreign key to Department
+    department = models.ForeignKey(Department, on_delete=models.SET_DEFAULT, default=1)  # Set a default department ID
+  # Foreign key to Department
 
     def __str__(self):
         return self.user.username  # String representation of the profile
