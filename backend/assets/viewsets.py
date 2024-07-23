@@ -1,19 +1,19 @@
-from django.shortcuts import get_object_or_404  # Import function to retrieve an object or raise a 404 error
-from rest_framework import viewsets, generics  # Import viewset and generic views
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny  # Import permission classes
-from rest_framework_simplejwt.authentication import JWTAuthentication  # Import JWT authentication class
-from django.contrib.auth import get_user_model  # Import function to get the user model
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode  # Import functions for URL-safe base64 encoding/decoding
-from django.core.mail import EmailMultiAlternatives  # Import class for sending multi-part emails
-from django.template.loader import render_to_string  # Import function to render templates to strings
-from django.urls import reverse  # Import function to reverse URL patterns
-from django.contrib.auth.tokens import default_token_generator  # Import default token generator for password resets
-from rest_framework.response import Response  # Import class for HTTP responses
-from rest_framework.views import APIView  # Import base class for API views
-from rest_framework import status, views  # Import status codes and base class for views
-from rest_framework_simplejwt.tokens import RefreshToken  # Import JWT refresh token class
-from assets.models import AssetTag, Category, Profile, Tag, Asset, CustomUser, AssetAssignment  # Import asset-related models
-from assets.serializers import (  # Import serializers for asset-related operations
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, generics
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.contrib.auth import get_user_model
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.contrib.auth.tokens import default_token_generator 
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status, views
+from rest_framework_simplejwt.tokens import RefreshToken
+from assets.models import AssetTag, Category, Profile, Tag, Asset, CustomUser, AssetAssignment
+from assets.serializers import (
     AssetWithCategorySerializer, CategorySerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ProfileSerializer,
     ProfileUpdateSerializer, TagSerializer, AssetSerializer, RegisterSerializer, PasswordChangeSerializer,
     AssetAssignmentSerializer, LoginSerializer
@@ -21,120 +21,90 @@ from assets.serializers import (  # Import serializers for asset-related operati
 
 # ============================== AUTHENTICATION MODULES =============================
 class RegisterView(APIView):
-    """
-    Handles user registration.
-    """
-    permission_classes = [AllowAny]  # Allow any user to access this view
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        """
-        Handles POST requests for user registration.
-        """
-        serializer = RegisterSerializer(data=request.data)  # Initialize serializer with request data
+        serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()  # Save the user if the data is valid
+            serializer.save()
             return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
         
         # Combine errors into one message
         errors = serializer.errors
         combined_errors = []
         if 'email' in errors:
-            combined_errors.append("User with that email already exists.")  # Append error for email if it exists
+            combined_errors.append("User with that email already exists.")
         if 'username' in errors:
-            combined_errors.append("User with that username already exists.")  # Append error for username if it exists
+            combined_errors.append("User with that username already exists.")
         if 'password' in errors:
-            combined_errors.append(errors['password'][0])  # Append password error if it exists
+            combined_errors.append(errors['password'][0])
 
-        return Response({"message": " ".join(combined_errors)}, status=status.HTTP_400_BAD_REQUEST)  # Return combined error messages
+        return Response({"message": " ".join(combined_errors)}, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
-    """
-    Handles user login.
-    """
-    permission_classes = [AllowAny]  # Allow any user to access this view
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        """
-        Handles POST requests for user login.
-        """
-        serializer = LoginSerializer(data=request.data, context={'request': request})  # Initialize serializer with request data and context
+        serializer = LoginSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             return Response({
                 "message": "Login successful",
-                "refresh": serializer.validated_data["refresh"],  # Return refresh token
-                "access": serializer.validated_data["access"]  # Return access token
+                "refresh": serializer.validated_data["refresh"],
+                "access": serializer.validated_data["access"]
             }, status=status.HTTP_200_OK)
         
         # Return a clean error message
         return Response({
-            "message": "Invalid login credentials"  # Return error message for invalid credentials
+            "message": "Invalid login credentials"
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
-    """
-    Handles user logout.
-    """
-    authentication_classes = [JWTAuthentication]  # Require JWT authentication for this view
-    permission_classes = [IsAuthenticated]  # Allow only authenticated users to access this view
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        """
-        Handles POST requests for user logout.
-        """
-        refresh_token = request.data.get('refresh_token')  # Get refresh token from request data
+        refresh_token = request.data.get('refresh_token')
         if not refresh_token:
-            return Response({"error": "Refresh token not provided."}, status=status.HTTP_400_BAD_REQUEST)  # Return error if no token provided
+            return Response({"error": "Refresh token not provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-        token = RefreshToken(refresh_token)  # Create a RefreshToken instance
-        token.blacklist()  # Blacklist the token to invalidate it
-        return Response({"message": "User logged out successfully."}, status=status.HTTP_205_RESET_CONTENT)  # Return success message
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+        return Response({"message": "User logged out successfully."}, status=status.HTTP_205_RESET_CONTENT)
 
 class PasswordChangeView(APIView):
-    """
-    Handles password change for authenticated users.
-    """
-    permission_classes = [IsAuthenticated]  # Allow only authenticated users to access this view
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        """
-        Handles POST requests for password change.
-        """
-        serializer = PasswordChangeSerializer(data=request.data, context={'request': request})  # Initialize serializer with request data and context
+        serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            request.user.set_password(serializer.validated_data['new_password'])  # Set the new password
-            request.user.save()  # Save the user with the new password
-            return Response({"message": "Password reset successfully."}, status=status.HTTP_200_OK)  # Return success message
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # Return validation errors
+            request.user.set_password(serializer.validated_data['new_password'])
+            request.user.save()
+            return Response({"message": "Password reset successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-User = get_user_model()  # Get the user model
+User = get_user_model()
 
 class PasswordResetView(viewsets.ViewSet):
-    """
-    Handles password reset requests.
-    """
-    serializer_class = PasswordResetRequestSerializer  # Specify serializer class
+    serializer_class = PasswordResetRequestSerializer
 
     def create(self, request):
-        """
-        Handles POST requests to initiate a password reset.
-        """
-        serializer = self.serializer_class(data=request.data)  # Initialize serializer with request data
-        serializer.is_valid(raise_exception=True)  # Validate data
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        email = serializer.validated_data['email']  # Get email from validated data
+        email = serializer.validated_data['email']
         
         try:
-            user = User.objects.get(email=email)  # Get user by email
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response({"message": "If an account with that email exists, a password reset link has been sent."}, status=status.HTTP_200_OK)  # Return success message if user does not exist
+            return Response({"message": "If an account with that email exists, a password reset link has been sent."}, status=status.HTTP_200_OK)
 
         # Generate password reset token
-        reset_token = default_token_generator.make_token(user)  # Create a reset token
-        uidb64 = urlsafe_base64_encode(str(user.pk).encode())  # Encode user ID in base64
+        reset_token = default_token_generator.make_token(user)
+        uidb64 = urlsafe_base64_encode(str(user.pk).encode())
 
         # Build reset password URL
         reset_password_url = "{}?uidb64={}&token={}".format(
-            request.build_absolute_uri(reverse('reset-password-confirm')),  # Build absolute URI for reset password view
+            request.build_absolute_uri(reverse('reset-password-confirm')),
             uidb64,
             reset_token
         )
@@ -142,141 +112,168 @@ class PasswordResetView(viewsets.ViewSet):
         # Prepare email content
         context = {
             'username': user.username,
-            'reset_password_url': reset_password_url  # Include reset password URL in context
+            'reset_password_url': reset_password_url
         }
 
-        email_html_message = render_to_string('email/password_reset_email.html', context)  # Render HTML email template
-        email_plaintext_message = render_to_string('email/password_reset_email.txt', context)  # Render plain text email template
+        email_html_message = render_to_string('email/password_reset_email.html', context)
+        email_plaintext_message = render_to_string('email/password_reset_email.txt', context)
 
         msg = EmailMultiAlternatives(
-            subject="Password Reset for Your SPH Asset Management Account",  # Set email subject
-            body=email_plaintext_message,  # Set plain text email body
-            from_email="noreply@gmail.com",  # Set sender email
-            to=[user.email]  # Set recipient email
+            subject="Password Reset for Your SPH Asset Management Account",
+            body=email_plaintext_message,
+            from_email="noreply@gmail.com",
+            to=[user.email]
         )
-        msg.attach_alternative(email_html_message, "text/html")  # Attach HTML alternative to email
-        msg.send()  # Send the email
+        msg.attach_alternative(email_html_message, "text/html")
+        msg.send()
 
-        return Response({"message": "If an account with that email exists, a password reset link has been sent."}, status=status.HTTP_200_OK)  # Return success message
+        return Response({"message": "If an account with that email exists, a password reset link has been sent."}, status=status.HTTP_200_OK)
 
 # =================== Reset password confirmation ============================================
-User = get_user_model()  # Get the user model
+User = get_user_model()
 
 class PasswordResetConfirmView(views.APIView):
-    """
-    Handles password reset confirmation.
-    """
     def post(self, request, *args, **kwargs):
-        """
-        Handles POST requests to confirm password reset.
-        """
-        serializer = PasswordResetConfirmSerializer(data=request.data)  # Initialize serializer with request data
+        serializer = PasswordResetConfirmSerializer(data=request.data)
         if serializer.is_valid():
-            uidb64 = serializer.validated_data.get('uidb64')  # Get UID from validated data
-            token = serializer.validated_data.get('token')  # Get reset token from validated data
-            new_password = serializer.validated_data.get('new_password')  # Get new password from validated data
+            uidb64 = serializer.validated_data.get('uidb64')
+            token = serializer.validated_data.get('token')
+            new_password = serializer.validated_data.get('new_password')
 
             try:
-                uid = urlsafe_base64_decode(uidb64).decode()  # Decode UID from base64
-                user = User.objects.get(pk=uid)  # Get user by UID
+                uid = urlsafe_base64_decode(uidb64).decode()
+                user = User.objects.get(pk=uid)
             except (TypeError, ValueError, OverflowError, User.DoesNotExist) as e:
-                return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)  # Return error if token or user is invalid
+                return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
             
-            if default_token_generator.check_token(user, token):  # Check if token is valid
-                user.set_password(new_password)  # Set the new password
-                user.save()  # Save the user with the new password
-                return Response({'message': 'Password has been reset successfully.'}, status=status.HTTP_200_OK)  # Return success message
+            if default_token_generator.check_token(user, token):
+                user.set_password(new_password)
+                user.save()
+                return Response({'message': 'Password has been reset successfully.'}, status=status.HTTP_200_OK)
             else:
-                return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)  # Return error if token is invalid
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # Return validation errors
-
+                return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # ================= Retrieving and entering data to and from the Asset model ===========================
 
 class AssetViewSet(viewsets.ModelViewSet):
-    """
-    Handles CRUD operations for Asset model.
-    """
-    queryset = Asset.objects.all()  # Set the queryset for all assets
-    serializer_class = AssetSerializer  # Specify serializer class
+    queryset = Asset.objects.all()
+    serializer_class = AssetSerializer
 
     def get_permissions(self):
-        """
-        Sets permissions based on the request method.
-        """
         if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            self.permission_classes = [IsAdminUser]  # Allow only admin users for POST, PUT, PATCH, DELETE methods
+            self.permission_classes = [IsAdminUser]
         else:
-            self.permission_classes = [IsAuthenticated]  # Allow authenticated users for other methods
-        return super().get_permissions()  # Return the permissions
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
 
 class AssetCategoryFilterViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Filters assets by category and provides read-only access.
-    """
-    serializer_class = AssetWithCategorySerializer  # Specify serializer class
-    permission_classes = [IsAuthenticated]  # Allow only authenticated users to access this view
+    serializer_class = AssetWithCategorySerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Returns queryset filtered by category name if provided.
-        """
-        category_name = self.request.query_params.get('category_name', None)  # Get category name from query parameters
+        category_name = self.request.query_params.get('category_name', None)
         if category_name:
-            return Asset.objects.filter(category__name=category_name)  # Filter assets by category name
-        return Asset.objects.all()  # Return all assets if no category name is provided
+            return Asset.objects.filter(category__name=category_name)
+        return Asset.objects.all()
 
     def list(self, request, *args, **kwargs):
-        """
-        Lists filtered assets with count.
-        """
-        queryset = self.get_queryset()  # Get the filtered queryset
-        serializer = self.get_serializer(queryset, many=True)  # Serialize the queryset
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
         response_data = {
-            'count': queryset.count(),  # Include the count of assets
-            'results': serializer.data  # Include serialized data of assets
+            'count': queryset.count(),
+            'results': serializer.data
         }
-        return Response(response_data, status=status.HTTP_200_OK)  # Return the response with asset data
+        return Response(response_data, status=status.HTTP_200_OK)
 
 # ============================== Manipulating a single asset in Asset model ===================================
 
 class AssetDetailView(APIView):
-    """
-    Provides detailed operations for a single asset.
-    """
     def get(self, request, id):
-        """
-        Retrieves a single asset by ID.
-        """
-        asset = get_object_or_404(Asset.objects.select_related('category', 'assignedDepartment'), id=id)  # Retrieve asset by ID or raise 404
-        serializer = AssetWithCategorySerializer(asset)  # Serialize the asset
-        return Response(serializer.data, status=status.HTTP_200_OK)  # Return the response with asset data
+        asset = get_object_or_404(Asset.objects.select_related('category', 'assignedDepartment'), id=id)
+        serializer = AssetWithCategorySerializer(asset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, id):
-        """
-        Updates a single asset by ID.
-        """
-        asset = get_object_or_404(Asset, id=id)  # Retrieve asset by ID or raise 404
-        serializer = AssetSerializer(asset, data=request.data)  # Initialize serializer with request data
+        asset = get_object_or_404(Asset, id=id)
+        serializer = AssetSerializer(asset, data=request.data)
         if serializer.is_valid():
-            serializer.save()  # Save the updated asset
-            return Response(serializer.data, status=status.HTTP_200_OK)  # Return the updated asset data
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # Return validation errors
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, id):
-        """
-        Partially updates a single asset by ID.
-        """
-        asset = get_object_or_404(Asset, id=id)  # Retrieve asset by ID or raise 404
-        serializer = AssetSerializer(asset, data=request.data, partial=True)  # Initialize serializer with partial update data
+        asset = get_object_or_404(Asset, id=id)
+        serializer = AssetSerializer(asset, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save()  # Save the partially updated asset
-            return Response({"msg": "Updated successfully"}, status=status.HTTP_200_OK)  # Return success message
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # Return validation errors
+            serializer.save()
+            return Response({"msg": "Updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):
-        """
-        Deletes a single asset by ID.
-        """
-        asset = get_object_or_404(Asset, id=id)  # Retrieve asset by ID or raise 404
-        asset.delete()  # Delete the asset
-        return Response({"message": "Asset deleted successfully"}, status=status.HTTP_204_NO_CONTENT)  # Return success message
+        asset = get_object_or_404(Asset, id=id)
+        asset.delete()
+        return Response({"msg": "Deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+# ============================ CRUD AssetAssignments ===========================
+
+class AssetAssignmentViewSet(viewsets.ModelViewSet):
+    queryset = AssetAssignment.objects.all()
+    serializer_class = AssetAssignmentSerializer
+
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            self.permission_classes = [IsAdminUser]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+
+# ============================ Profiles with departments ========================
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            self.permission_classes = [IsAdminUser]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+
+class ProfileUpdateView(generics.UpdateAPIView):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user.profile
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+# ============================ Categories, Tags ==============================
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            self.permission_classes = [IsAdminUser]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+
+class AssetTagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            self.permission_classes = [IsAdminUser]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
