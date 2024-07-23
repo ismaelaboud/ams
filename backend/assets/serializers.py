@@ -283,7 +283,7 @@ class TagSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Tag
-        fields = ['id', 'name']
+        fields = ['id', 'name','barcode_number','barcode_image']
 
 # Serializer for the Asset model
 class AssetSerializer(serializers.ModelSerializer):
