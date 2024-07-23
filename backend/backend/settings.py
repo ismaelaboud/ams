@@ -11,8 +11,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-sv8hm9fmt3$$_pdjz7xl3)dclejl(g358sl7o+jk-0f_!r&my+'
 DEBUG = True
 
+
+import os
+
+# Other settings...
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Update ALLOWED_HOSTS with the domains you want to allow
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*',"*"]
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'https://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://127.0.0.1:8000'
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5000",
+    "http://localhost:8000",
+    "https://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://127.0.0.1:8000"
+]
 
 # Application definition
 INSTALLED_APPS = [

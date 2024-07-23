@@ -3,6 +3,11 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 
+from django.db import models
+from .barcode_gen import generate_barcode
+from django.core.files import File
+import os
+
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, max_length=50)
     firstName = models.CharField(max_length=30)
@@ -103,12 +108,30 @@ def create_default_categories(sender, **kwargs):
 class Tag(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
+    barcode_image = models.ImageField(upload_to='barcodes/', blank=True, null=True)
+    barcode_number = models.CharField(max_length=13, blank=True, null=True)
 
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        if not self.barcode_image:
+            # Generate the barcode
+            barcode_path, barcode_number = generate_barcode(self.name)
+            
+            # Save the barcode image
+            with open(barcode_path, 'rb') as f:
+                self.barcode_image.save(os.path.basename(barcode_path), File(f), save=False)
+            
+            # Save the barcode number
+            self.barcode_number = barcode_number
+        
+        super().save(*args, **kwargs)
+
     class Meta:
-        db_table = 'tags'        
+        db_table = 'tags'
+
+
 
 
 class Asset(models.Model):
