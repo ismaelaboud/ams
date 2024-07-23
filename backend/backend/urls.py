@@ -1,25 +1,25 @@
-# backend/urls.py
-
 from django.contrib import admin
 from django.urls import path, include
+from assets import views
 from routers import router  # Import router from the root directory
-from assets.viewsets import CategoryViewSet, RegisterView, LoginView, LogoutView, PasswordResetView
-from assets.viewsets import RegisterView, LoginView,LogoutView,PasswordResetView
 from assets.tests import Test
-
-# Register CategoryViewSet with a unique basename, e.g., 'category-api'
-router.register(r'categories', CategoryViewSet, basename='category-api')
+from assets.viewsets import (
+    AssetDetailView, PasswordChangeView, PasswordResetConfirmView, PasswordResetView, ProfileUpdateView,
+    RegisterView, LoginView, LogoutView,
+    AssetAssignmentViewSet
+)
 
 # Define your urlpatterns
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include(router.urls)),  # Include the API routes from the router
-    path('api/auth/register/', RegisterView.as_view(), name='register'),  # Add user registration route
-    path('api/auth/login/', LoginView.as_view(), name='login'),  # Add user login route
-    path('api/auth/logout/', LogoutView.as_view(), name='logout'),  # Add user logout route
-    path('api/auth/reset_password/', PasswordResetView.as_view(), name='reset_password'),  # Add password reset route
+    path('api/', include(router.urls)),  # Ensure router is correctly defined
+    path('api/auth/register/', RegisterView.as_view(), name='register'),
+    path('api/auth/login/', LoginView.as_view(), name='login'),
+    path('api/password_reset/', PasswordResetView.as_view({'post': 'create'}), name='password-reset-request'),
+    path('api/reset-password-confirm/', PasswordResetConfirmView.as_view(), name='reset-password-confirm'),
     path('api/auth/logout/', LogoutView.as_view(), name='logout'),
-    path('api/auth/reset_password/', PasswordResetView.as_view(), name='reset_password'),
-
-    path('api/tests/', Test.as_view(), name="tests")
+    path('api/auth/change_password/', PasswordChangeView.as_view(), name='change_password'),
+    path('api/profile/update/', ProfileUpdateView.as_view(), name='profile-update'),
+    path('api/tests/', Test.as_view(), name='tests'),
+    path('api/assets/detail/<int:id>/', AssetDetailView.as_view(), name='asset_detail'),
 ]

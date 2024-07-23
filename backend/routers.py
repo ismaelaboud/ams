@@ -1,17 +1,24 @@
-# routers.py
+from django.urls import path
 from rest_framework import routers
-from assets.viewsets import AssetViewSet, CategoryViewSet, TagViewSet, AssetTagViewSet
-from assets.viewsets import AssetViewSet, CategoryViewSet, TagViewSet
+from assets import views
+from assets.viewsets import(
+   AssetAssignmentViewSet, AssetCategoryFilterViewSet, AssetTagViewSet, AssetViewSet,
+       UserProfileViewSet
+)
+
 # Initialize the default router
 router = routers.DefaultRouter()
 
-# Register the CategoryViewSet with the router
-router.register(r'categories', CategoryViewSet, basename='category')
+# =============== User Profile ===========================
+router.register(r'user_profiles', UserProfileViewSet, basename='user-profile')
 
-# Register the TagViewSet with the router
-router.register(r'tags', TagViewSet, basename='tag')
 
-# Register the AssetViewSet with the router
+# =============== Asset Routers ===========================
+# all assets
 router.register(r'assets', AssetViewSet, basename='asset')
+#all assets where category is Furnitures
+router.register(r'assets-by-category', AssetCategoryFilterViewSet, basename='asset-category-filter')
 # Register the AssetTagViewSet with the router
 router.register(r'asset-tags', AssetTagViewSet, basename='asset-tag')
+router.register(r'asset-assignments', AssetAssignmentViewSet, basename='asset-assignment')
+
