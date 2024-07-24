@@ -11,9 +11,13 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/auth";
 import { LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
 export function UserNav() {
+  const { user } = useAuth();
+  console.log(user);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -27,9 +31,11 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Jacob K.</p>
+            <p className="text-sm font-medium leading-none">
+              {user[0]?.user?.firstName} {user[0]?.user?.lastName}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
-              jacob.k@gmail.com
+              {user[0]?.user?.email}
             </p>
           </div>
         </DropdownMenuLabel>
