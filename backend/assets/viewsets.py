@@ -84,35 +84,31 @@ class PasswordChangeView(APIView):
 
 User = get_user_model()
 
-class PasswordResetView(viewsets.ViewSet):
+class PasswordResetView(views.APIView):
     serializer_class = PasswordResetRequestSerializer
 
-    def create(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data['email']
-        
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             return Response({"message": "If an account with that email exists, a password reset link has been sent."}, status=status.HTTP_200_OK)
 
-        # Generate password reset token
         reset_token = default_token_generator.make_token(user)
         uidb64 = urlsafe_base64_encode(str(user.pk).encode())
 
-        # Build reset password URL
-        reset_password_url = "{}?uidb64={}&token={}".format(
-            request.build_absolute_uri(reverse('reset-password-confirm')),
+        # Point the reset link to the frontend URL
+        frontend_reset_password_url = "http://127.0.0.1:3000/reset?uidb64={}&token={}".format(
             uidb64,
             reset_token
         )
 
-        # Prepare email content
         context = {
             'username': user.username,
-            'reset_password_url': reset_password_url
+            'reset_password_url': frontend_reset_password_url
         }
 
         email_html_message = render_to_string('email/password_reset_email.html', context)
@@ -129,9 +125,6 @@ class PasswordResetView(viewsets.ViewSet):
 
         return Response({"message": "If an account with that email exists, a password reset link has been sent."}, status=status.HTTP_200_OK)
 
-# =================== Reset password confirmation ============================================
-User = get_user_model()
-
 class PasswordResetConfirmView(views.APIView):
     def post(self, request, *args, **kwargs):
         serializer = PasswordResetConfirmSerializer(data=request.data)
@@ -143,9 +136,9 @@ class PasswordResetConfirmView(views.APIView):
             try:
                 uid = urlsafe_base64_decode(uidb64).decode()
                 user = User.objects.get(pk=uid)
-            except (TypeError, ValueError, OverflowError, User.DoesNotExist) as e:
+            except (TypeError, ValueError, OverflowError, User.DoesNotExist):
                 return Response({'error': 'Invalid token or user'}, status=status.HTTP_400_BAD_REQUEST)
-            
+
             if default_token_generator.check_token(user, token):
                 user.set_password(new_password)
                 user.save()
@@ -229,30 +222,35 @@ class AssetAssignmentViewSet(viewsets.ModelViewSet):
 
 # ============================ Profiles with departments ========================
 
-class UserProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-
-    def get_permissions(self):
-        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            self.permission_classes = [IsAdminUser]
-        else:
-            self.permission_classes = [IsAuthenticated]
-        return super().get_permissions()
-
-class ProfileUpdateView(generics.UpdateAPIView):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileUpdateSerializer
+class UserProfileViewSet(generics.RetrieveUpdateAPIView):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-
+    
     def get_object(self):
-        return self.request.user.profile
+        """
+        Return the profile of the currently authenticated user.
+        If the profile does not exist, create one.
+        """
+        user = self.request.user
+        try:
+            return user.profile
+        except Profile.DoesNotExist:
+            # Optionally, create the profile if it doesn't exist
+            profile = Profile.objects.create(user=user)
+            return profile
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return ProfileUpdateSerializer
+        return ProfileSerializer
 
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        return self.partial_update(request, *args, **kwargs)
+
+
 
 # ============================ Categories, Tags ==============================
 
@@ -268,12 +266,21 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
 class AssetTagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
+    """
+    A viewset for viewing and editing tag instances.
+    """
+    queryset = Tag.objects.all()  # Defines the set of Tag objects this viewset will operate on
+    serializer_class = TagSerializer  # Specifies the serializer to use for the Tag model
 
     def get_permissions(self):
+        """
+        Returns the list of permission classes that are allowed for this viewset.
+        - Admin users are required for POST, PUT, PATCH, DELETE methods.
+        - Authenticated users are allowed for GET method.
+        """
         if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            self.permission_classes = [IsAdminUser]
+            self.permission_classes = [IsAdminUser]  # Only admin users can create, update, or delete tags
         else:
-            self.permission_classes = [IsAuthenticated]
+            self.permission_classes = [IsAuthenticated]  # Authenticated users can view tags
+        
         return super().get_permissions()

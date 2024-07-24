@@ -1,3 +1,5 @@
+import logging
+from venv import logger
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -13,8 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['id', 'username', 'email', 'firstName', 'lastName', 'date_joined']
 
-
 # ========================== USER MANAGEMENT SERIALIZERS MODULES =============================
+
 # Serializer for user registration
 class RegisterSerializer(serializers.ModelSerializer):
     """
@@ -62,8 +64,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         Customize the representation of the user data, excluding the password fields.
         """
         response = super().to_representation(instance)
-        response.pop('password', None)  # Remove password from response
-        response.pop('password2', None)  # Remove password2 from response
+        response.pop('password', None)
+        response.pop('password2', None)
         return response
 
 # Serializer for user login
@@ -86,7 +88,7 @@ class LoginSerializer(serializers.Serializer):
         if not usernameOrEmail or not password:
             raise serializers.ValidationError("Username/Email and password are required")
 
-        # Try to authenticate with the username_or_email as username first
+        # Try to authenticate with the usernameOrEmail as username first
         user = authenticate(username=usernameOrEmail, password=password)
 
         if user is None:
@@ -107,7 +109,7 @@ class LoginSerializer(serializers.Serializer):
 
         return attrs
 
-# ===================== User Changing password ===============================
+# ===================== User Changing Password ===============================
 class PasswordChangeSerializer(serializers.Serializer):
     """
     Serializer for changing user password.
@@ -133,7 +135,7 @@ class PasswordChangeSerializer(serializers.Serializer):
             raise serializers.ValidationError("Old password is incorrect")
         return value
 
-# ================= Reseting user password by sending reset token to email =================
+# ================= Resetting User Password by Sending Reset Token to Email =================
 class PasswordResetRequestSerializer(serializers.Serializer):
     """
     Serializer for requesting a password reset via email.
@@ -148,7 +150,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError("There is no user registered with this email address.")
         return value
 
-# ================ Confirm password reset =============================
+# ================ Confirm Password Reset =============================
 class PasswordResetConfirmSerializer(serializers.Serializer):
     """
     Serializer for confirming password reset with a token.
@@ -203,69 +205,92 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'email': {'required': False},
         }
 
+# ====================== Converting department name to its corresponding id =====================from rest_framework import serializers
+class DepartmentNameToIdSerializer(serializers.Serializer):
+    """
+    Serializer for converting a department name to its corresponding ID.
+    """
+    department_name = serializers.CharField()
+
+    def validate_department_name(self, value):
+        """
+        Validate that the department name exists and return its ID(s).
+        """
+        departments = Department.objects.filter(name=value)
+        if not departments.exists():
+            raise serializers.ValidationError({"department_name": "Invalid department name."})
+
+        # Handle multiple departments with the same name
+        return [department.id for department in departments]
+
+
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for updating user profile information.
     """
     user = CustomUserSerializer(partial=True)  # Allow partial updates on user
-    department = DepartmentSerializer()
+    department = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all(), 
+        required=False, 
+        write_only=True
+    )
+    department_name = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Profile
-        fields = ['user', 'department', 'role']
+        fields = ['user', 'department', 'department_name', 'role']
 
     def validate(self, data):
         """
-        Validate username and email uniqueness if provided.
+        Override the validate method to use DepartmentNameToIdSerializer
         """
-        user_data = data.get('user', {})
-        username = user_data.get('username', None)
-        email = user_data.get('email', None)
-
-        # Check for unique username
-        if username:
-            if CustomUser.objects.exclude(id=self.instance.user.id).filter(username=username).exists():
-                raise serializers.ValidationError({
-                    'user': {
-                        'username': 'A user with that username already exists.'
-                    }
-                })
-
-        # Check for unique email
-        if email:
-            if CustomUser.objects.exclude(id=self.instance.user.id).filter(email=email).exists():
-                raise serializers.ValidationError({
-                    'user': {
-                        'email': 'A user with this email already exists.'
-                    }
-                })
-
+        department_name = data.get('department_name')
+        if department_name:
+            dept_serializer = DepartmentNameToIdSerializer(data={'department_name': department_name})
+            if dept_serializer.is_valid():
+                # Use the first department ID if multiple IDs are returned
+                department_id = dept_serializer.validated_data['department_name'][0]
+                data['department'] = department_id
+            else:
+                raise serializers.ValidationError(dept_serializer.errors)
         return data
 
+    def to_representation(self, instance):
+        """
+        Customize the representation to include department name.
+        """
+        representation = super().to_representation(instance)
+        representation['department_name'] = instance.department.name if instance.department else None
+        return representation
+
     def update(self, instance, validated_data):
-        """
-        Update profile and user information.
-        """
-        user_data = validated_data.pop('user', None)
-        department_data = validated_data.pop('department', None)
+        user_data = validated_data.pop('user', {})
+        department_id = validated_data.pop('department', None)
 
-        # Update Profile fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        
+        # Update the User instance
         if user_data:
-            user = instance.user
-            for attr, value in user_data.items():
-                if value is not None:  # Only update if value is provided
-                    setattr(user, attr, value)
-            user.save()
+            user_instance = instance.user
+            user_serializer = CustomUserSerializer(user_instance, data=user_data, partial=True)
+            if user_serializer.is_valid():
+                user_serializer.save()
+            else:
+                raise serializers.ValidationError({"user": user_serializer.errors})
 
-        if department_data:
-            department, created = Department.objects.get_or_create(**department_data)
-            instance.department = department
+        # Update the Department instance (ID assignment)
+        if department_id:
+            instance.department_id = department_id  # Use the department ID
 
+        # Update other fields
+        instance.role = validated_data.get('role', instance.role)
         instance.save()
+
         return instance
+
+
+
+
+
+# ===================== Asset Management Serializers ======================
 
 # Serializer for the Category model
 class CategorySerializer(serializers.ModelSerializer):
@@ -283,7 +308,7 @@ class TagSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Tag
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'barcode_number', 'barcode_image']
 
 # Serializer for the Asset model
 class AssetSerializer(serializers.ModelSerializer):
