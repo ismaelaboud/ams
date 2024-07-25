@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const Home = () => {
   return (
@@ -12,7 +13,7 @@ const Home = () => {
               <li><a href="#" className="text-gray-700 hover:text-gray-900">About</a></li>
               
               <li><Button className="text-white">Sign Up</Button></li>
-              <li><Button className="text-white">Sign In</Button></li>
+              <li><Link href="/login"><Button className="text-white">Sign In</Button></Link></li>
             </ul>
           </nav>
         </div>
