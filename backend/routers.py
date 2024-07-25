@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework import routers
 from assets import views
 from assets.viewsets import(
-   AssetAssignmentViewSet, AssetCategoryFilterViewSet, AssetTagViewSet, AssetViewSet,
+   AssetAssignmentViewSet, AssetCategoryFilterViewSet, AssetTagViewSet, AssetViewSet, CategoryViewSet, DepartmentViewSet,
        UserProfileViewSet
 )
 
@@ -19,3 +19,6 @@ router.register(r'assets-by-category', AssetCategoryFilterViewSet, basename='ass
 router.register(r'asset-tags', AssetTagViewSet, basename='asset-tag')
 router.register(r'asset-assignments', AssetAssignmentViewSet, basename='asset-assignment')
 
+
+router.register(r'departments', DepartmentViewSet, basename='department')
+router.register(r'categories', CategoryViewSet, basename='category')
