@@ -179,7 +179,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Department
-        fields = ['name']
+        fields = ['id','name']
 
 class ProfileSerializer(serializers.ModelSerializer):
     """
@@ -340,3 +340,4 @@ class AssetWithCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = '__all__'
+

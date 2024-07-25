@@ -12,9 +12,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, views
 from rest_framework_simplejwt.tokens import RefreshToken
-from assets.models import AssetTag, Category, Profile, Tag, Asset, CustomUser, AssetAssignment
+from assets.models import AssetTag, Category, Department, Profile, Tag, Asset, CustomUser, AssetAssignment
 from assets.serializers import (
-    AssetWithCategorySerializer, CategorySerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ProfileSerializer,
+    AssetWithCategorySerializer, CategorySerializer, DepartmentSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ProfileSerializer,
     ProfileUpdateSerializer, TagSerializer, AssetSerializer, RegisterSerializer, PasswordChangeSerializer,
     AssetAssignmentSerializer, LoginSerializer
 )
@@ -77,7 +77,7 @@ class PasswordChangeView(APIView):
     def post(self, request):
         serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            request.user.set_password(serializer.validated_data['new_password'])
+            request.user.set_password(serializer.validated_data['newPassword'])
             request.user.save()
             return Response({"message": "Password reset successfully."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -284,3 +284,65 @@ class AssetTagViewSet(viewsets.ModelViewSet):
             self.permission_classes = [IsAuthenticated]  # Authenticated users can view tags
         
         return super().get_permissions()
+
+class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    A simple ViewSet for viewing categories.
+    """
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    def list(self, request, *args, **kwargs):
+        """
+        Override the list method to provide custom validation and error handling.
+        """
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Override the retrieve method to provide custom validation and error handling.
+        """
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        except Category.DoesNotExist:
+            return Response({'detail': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    A simple ViewSet for viewing departments.
+    """
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+
+    def list(self, request, *args, **kwargs):
+        """
+        Override the list method to provide custom validation and error handling.
+        """
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Override the retrieve method to provide custom validation and error handling.
+        """
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        except Department.DoesNotExist:
+            return Response({'detail': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
