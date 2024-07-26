@@ -8,22 +8,33 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth";
 
 export default function ProfileDetails() {
-  const { user } = useAuth();
-  const [username, setUsername] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+  const { loading, logoutUser, user, updateProfile, updatePassword } =
+    useAuth();
+  // const [username, setUsername] = useState<string>("");
+  // const [email, setEmail] = useState<string>("");
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
+  const [oldPassword, setOldPassword] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState<string>("");
 
   useEffect(() => {
-    setUsername(user[0]?.user?.username);
-    setEmail(user[0]?.user?.email);
-    setFirstName(user[0]?.user?.firstName);
-    setLastName(user[0]?.user?.lastName);
+    // setUsername(user?.user?.username);
+    // setEmail(user?.user?.email);
+    setFirstName(user?.user?.firstName);
+    setLastName(user?.user?.lastName);
   }, [user]);
+
+  // console.log(user);
 
   const handleProfileUpdate = async (e: any) => {
     e.preventDefault();
-    console.log(username, email, firstName, lastName);
+    updateProfile(firstName, lastName);
+  };
+
+  const handlePasswordUpdate = async (e: any) => {
+    e.preventDefault();
+    updatePassword(oldPassword, newPassword, newPasswordConfirm);
   };
 
   return (
@@ -39,25 +50,25 @@ export default function ProfileDetails() {
           <div>
             <span className="font-medium mr-2">Name:</span>
             <span className="text-sm text-muted-foreground">
-              {user[0]?.user?.firstName} {user[0]?.user?.lastName}
+              {user?.user?.firstName} {user?.user?.lastName}
             </span>
           </div>
           <div>
             <span className="font-medium mr-2">Username:</span>
             <span className="text-sm text-muted-foreground">
-              {user[0]?.user?.username}
+              {user?.user?.username}
             </span>
           </div>
           <div>
             <span className="font-medium mr-2">Email:</span>
             <span className="text-sm text-muted-foreground">
-              {user[0]?.user?.email}
+              {user?.user?.email}
             </span>
           </div>
           <div className="mb-4">
             <span className="font-medium mr-2">Account created on:</span>
             <span className="text-sm text-muted-foreground">
-              {new Date(user[0]?.user?.date_joined).toLocaleString()}
+              {new Date(user?.user?.date_joined).toLocaleString()}
             </span>
           </div>
         </>
@@ -93,7 +104,7 @@ export default function ProfileDetails() {
               />
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-8">
+          {/* <div className="grid sm:grid-cols-2 gap-8">
             <div>
               <Label className="block mb-3">Username</Label>
               <Input
@@ -114,9 +125,72 @@ export default function ProfileDetails() {
                 defaultValue={email}
               />
             </div>
-          </div>
-          <Button type="submit">Update</Button>
+          </div> */}
+          <Button disabled={loading} aria-disabled={loading} type="submit">
+            {loading ? "Updating..." : "Update"}
+          </Button>
         </form>
+      </section>
+      <section>
+        <Separator />
+        <div className="my-6">
+          <h2 className="text-xl font-bold tracking-tight">Update password</h2>
+          <p className="text-sm text-muted-foreground tracking-tight">
+            Update your password here
+          </p>
+        </div>
+        <form onSubmit={handlePasswordUpdate} className="space-y-8 px-1 w-full">
+          <div className="grid sm:grid-cols-2 gap-8">
+            <div>
+              <Label className="block mb-3">Old password</Label>
+              <Input
+                type="password"
+                placeholder="********"
+                onChange={(e) => setOldPassword(e.target.value)}
+                className="w-full"
+                value={oldPassword}
+                required
+              />
+            </div>
+            <div>
+              <Label className="block mb-3">New password</Label>
+              <Input
+                type="password"
+                placeholder="********"
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full"
+                value={newPassword}
+                required
+              />
+            </div>
+            <div>
+              <Label className="block mb-3">Confirm new password</Label>
+              <Input
+                type="password"
+                placeholder="********"
+                onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                className="w-full"
+                value={newPasswordConfirm}
+                required
+              />
+            </div>
+          </div>
+
+          <Button disabled={loading} aria-disabled={loading} type="submit">
+            {loading ? "Updating..." : "Update"}
+          </Button>
+          <Separator />
+        </form>
+        <Button
+          onClick={logoutUser}
+          variant="destructive"
+          disabled={loading}
+          aria-disabled={loading}
+          type="submit"
+          className="my-8"
+        >
+          {loading ? "Wait..." : "Logout"}
+        </Button>
       </section>
     </>
   );
