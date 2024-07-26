@@ -1,47 +1,40 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Separator } from "../ui/separator";
-import { Button } from "../ui/button";
-
-const formSchema = z.object({
-  firstName: z.string().min(3, {
-    message: "Firstname must be atleast 3 characters",
-  }),
-  lastName: z.string().min(3, {
-    message: "Lastname must be atleast 3 characters",
-  }),
-  email: z.string().email({
-    message: "Please a valid email",
-  }),
-  username: z.string().min(3, {
-    message: "Username must be at least 3 characters.",
-  }),
-});
-
-type ProfileFormValues = z.infer<typeof formSchema>;
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/auth";
 
 export default function ProfileDetails() {
-  const defaultValues: Partial<ProfileFormValues> = {};
+  const { loading, logoutUser, user, updateProfile, updatePassword } =
+    useAuth();
+  // const [username, setUsername] = useState<string>("");
+  // const [email, setEmail] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [oldPassword, setOldPassword] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState<string>("");
 
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues,
-  });
+  useEffect(() => {
+    // setUsername(user?.user?.username);
+    // setEmail(user?.user?.email);
+    setFirstName(user?.user?.firstName);
+    setLastName(user?.user?.lastName);
+  }, [user]);
 
-  const onSubmit = async (data: ProfileFormValues) => {
-    console.log(data);
+  // console.log(user);
+
+  const handleProfileUpdate = async (e: any) => {
+    e.preventDefault();
+    updateProfile(firstName, lastName);
+  };
+
+  const handlePasswordUpdate = async (e: any) => {
+    e.preventDefault();
+    updatePassword(oldPassword, newPassword, newPasswordConfirm);
   };
 
   return (
@@ -56,22 +49,26 @@ export default function ProfileDetails() {
         <>
           <div>
             <span className="font-medium mr-2">Name:</span>
-            <span className="text-sm text-muted-foreground">Jacob Kyalo</span>
+            <span className="text-sm text-muted-foreground">
+              {user?.user?.firstName} {user?.user?.lastName}
+            </span>
           </div>
           <div>
             <span className="font-medium mr-2">Username:</span>
-            <span className="text-sm text-muted-foreground">jack</span>
+            <span className="text-sm text-muted-foreground">
+              {user?.user?.username}
+            </span>
           </div>
           <div>
             <span className="font-medium mr-2">Email:</span>
             <span className="text-sm text-muted-foreground">
-              jacob.k@gmail.com
+              {user?.user?.email}
             </span>
           </div>
           <div className="mb-4">
             <span className="font-medium mr-2">Account created on:</span>
             <span className="text-sm text-muted-foreground">
-              25th July 2024
+              {new Date(user?.user?.date_joined).toLocaleString()}
             </span>
           </div>
         </>
@@ -84,94 +81,116 @@ export default function ProfileDetails() {
         </div>
       </section>
       <section>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-8 px-1 w-full"
-          >
-            <div className="grid sm:grid-cols-2 gap-8">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Firstname</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Firstname"
-                        {...field}
-                        className="w-full"
-                        defaultValue="firstname"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lastname</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Lastname"
-                        {...field}
-                        className="w-full"
-                        defaultValue="lastname"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleProfileUpdate} className="space-y-8 px-1 w-full">
+          <div className="grid sm:grid-cols-2 gap-8">
+            <div>
+              <Label className="block mb-3">Firstname</Label>
+              <Input
+                type="text"
+                placeholder="Firstname"
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full"
+                defaultValue={firstName}
               />
             </div>
-            <div className="grid sm:grid-cols-2 gap-8">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="username"
-                        {...field}
-                        className="w-full"
-                        defaultValue="username"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="email"
-                        {...field}
-                        className="w-full"
-                        defaultValue="user@gmail.com"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            <div>
+              <Label className="block mb-3">Lastname</Label>
+              <Input
+                type="text"
+                placeholder="Lastname"
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full"
+                defaultValue={lastName}
               />
             </div>
-            <Button>Update</Button>
-          </form>
-        </Form>
+          </div>
+          {/* <div className="grid sm:grid-cols-2 gap-8">
+            <div>
+              <Label className="block mb-3">Username</Label>
+              <Input
+                type="text"
+                placeholder="Username"
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full"
+                defaultValue={username}
+              />
+            </div>
+            <div>
+              <Label className="block mb-3">Email</Label>
+              <Input
+                type="email"
+                placeholder="Email address"
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full"
+                defaultValue={email}
+              />
+            </div>
+          </div> */}
+          <Button disabled={loading} aria-disabled={loading} type="submit">
+            {loading ? "Updating..." : "Update"}
+          </Button>
+        </form>
+      </section>
+      <section>
+        <Separator />
+        <div className="my-6">
+          <h2 className="text-xl font-bold tracking-tight">Update password</h2>
+          <p className="text-sm text-muted-foreground tracking-tight">
+            Update your password here
+          </p>
+        </div>
+        <form onSubmit={handlePasswordUpdate} className="space-y-8 px-1 w-full">
+          <div className="grid sm:grid-cols-2 gap-8">
+            <div>
+              <Label className="block mb-3">Old password</Label>
+              <Input
+                type="password"
+                placeholder="********"
+                onChange={(e) => setOldPassword(e.target.value)}
+                className="w-full"
+                value={oldPassword}
+                required
+              />
+            </div>
+            <div>
+              <Label className="block mb-3">New password</Label>
+              <Input
+                type="password"
+                placeholder="********"
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full"
+                value={newPassword}
+                required
+              />
+            </div>
+            <div>
+              <Label className="block mb-3">Confirm new password</Label>
+              <Input
+                type="password"
+                placeholder="********"
+                onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                className="w-full"
+                value={newPasswordConfirm}
+                required
+              />
+            </div>
+          </div>
+
+          <Button disabled={loading} aria-disabled={loading} type="submit">
+            {loading ? "Updating..." : "Update"}
+          </Button>
+          <Separator />
+        </form>
+        <Button
+          onClick={logoutUser}
+          variant="destructive"
+          disabled={loading}
+          aria-disabled={loading}
+          type="submit"
+          className="my-8"
+        >
+          {loading ? "Wait..." : "Logout"}
+        </Button>
       </section>
     </>
   );

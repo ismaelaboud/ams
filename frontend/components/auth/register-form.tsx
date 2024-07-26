@@ -14,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useAuth } from "@/contexts/auth";
 
 const formSchema = z
   .object({
@@ -40,6 +41,8 @@ const formSchema = z
   });
 
 export default function RegisterForm() {
+  const { loading, registerUser } = useAuth();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -53,7 +56,9 @@ export default function RegisterForm() {
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log(data);
+    const { username, email, firstName, lastName, password, password2 } = data;
+
+    registerUser(username, password, password2, email, firstName, lastName);
   };
 
   return (
@@ -159,8 +164,13 @@ export default function RegisterForm() {
                 )}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Register
+            <Button
+              disabled={loading}
+              aria-disabled={loading}
+              type="submit"
+              className="w-full"
+            >
+              {loading ? "Please wait..." : "Register"}
             </Button>
             <p className="text-muted-foreground text-sm mt-2">
               Already have an account?{" "}
