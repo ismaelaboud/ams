@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { apiUrl } from "@/lib/axios";
 import { useAuth } from "@/contexts/auth";
 
-export default function Assets() {
+export default function ElectronicsAssets() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const { user } = useAuth();
 
@@ -19,13 +19,17 @@ export default function Assets() {
     const fetchAllAssets = async () => {
       const accessToken = localStorage.getItem("access");
       try {
-        const { data } = await apiUrl.get("/assets-by-category/", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const allAssets = sortAssetsByDateAdded(data?.results);
-        setAssets(allAssets);
+        const { data } = await apiUrl.get(
+          "/assets-by-category/?category_name=Office Supplies",
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        const allOfficeAsupplies = sortAssetsByDateAdded(data?.results);
+        setAssets(allOfficeAsupplies);
         // console.log(data);
       } catch (error: any) {
         console.log(error);
@@ -41,7 +45,7 @@ export default function Assets() {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Assets</h2>
             <p className="text-sm text-muted-foreground tracking-tight">
-              Manage all assets
+              Manage all office supplies assets
             </p>
           </div>
 

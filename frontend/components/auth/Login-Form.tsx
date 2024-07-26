@@ -15,11 +15,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { apiUrl } from "@/lib/axios";
+import { useAuth } from "@/contexts/auth";
 
 const formSchema = z.object({
-  email: z.string().email({
-    message: "Please enter a valid email address.",
+  usernameOrEmail: z.string().min(2, {
+    message: "Please enter a valid email address or username.",
   }),
   password: z.string().min(8, {
     message: "Password must be at least 8 characters.",
@@ -27,21 +27,19 @@ const formSchema = z.object({
 });
 
 export default function LoginForm() {
+  const { loading, loginUser } = useAuth();
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      usernameOrEmail: "",
       password: "",
     },
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    const { email, password } = data;
-    const res = await apiUrl.post("/auth/login", {
-      email,
-      password,
-    });
-    console.log(res);
+    const { usernameOrEmail, password } = data;
+    loginUser(usernameOrEmail, password);
   };
 
   return (
@@ -58,14 +56,14 @@ export default function LoginForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="email"
+              name="usernameOrEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email/Username</FormLabel>
                   <FormControl>
                     <Input
-                      type="email"
-                      placeholder="hello@gmail.com"
+                      type="text"
+                      placeholder="Email or Username"
                       {...field}
                     />
                   </FormControl>
@@ -94,8 +92,13 @@ export default function LoginForm() {
                 Forgot Password?
               </Link>
             </div>
-            <Button type="submit" className="w-full">
-              Login
+            <Button
+              disabled={loading}
+              aria-disabled={loading}
+              type="submit"
+              className="w-full"
+            >
+              {loading ? "Please wait..." : "Login"}
             </Button>
             <p className="text-muted-foreground text-sm mt-2">
               Don&apos;t have an account?{" "}

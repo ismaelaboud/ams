@@ -14,21 +14,21 @@ export interface Category {
 const categories: Category[] = [
   {
     title: "Electronics",
-    link: "assets/categories/electronics",
+    link: "/dashboard/assets/categories/electronics",
     sNo: "#1",
     image: "assets/avatars/avatar1.jpg",
     fallback: "EA",
   },
   {
     title: "Furnitures",
-    link: "assets/categories/furnitures",
+    link: "/dashboard/assets/categories/furnitures",
     sNo: "#2",
     image: "assets/avatars/avatar1.jpg",
     fallback: "FA",
   },
   {
     title: "Office Supplies",
-    link: "assets/categories/office-supplies",
+    link: "/dashboard/assets/categories/office-supplies",
     sNo: "#3",
     image: "assets/avatars/avatar1.jpg",
     fallback: "OA",
