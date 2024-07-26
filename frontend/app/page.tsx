@@ -1,3 +1,8 @@
+"use client";
+
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -31,7 +36,7 @@ const Home = () => {
         </div>
       </footer>
     </div>
-  );
-};
+    )
+}
 
 export default Home;

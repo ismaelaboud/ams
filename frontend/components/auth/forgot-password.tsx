@@ -36,9 +36,9 @@ export default function ForgotPassword() {
   };
 
   return (
-    <section className="flex h-screen item-center justify-center my-10">
-      <div className="w-full max-w-md h-fit border rounded-lg px-4 sm:px-10 py-10">
-        <div className="flex flex-col gap-y-1 mb-6">
+    <section className="flex items-center justify-center h-screen">
+      <div className="flex flex-col gap-6 border rounded-lg p-10 max-w-md w-full">
+        <div className="flex flex-col gap-y-1 mb-2">
           <Link
             href="/login"
             className="text-muted-foreground mb-2 hover:text-primary text-base flex gap-x-2 items-center"

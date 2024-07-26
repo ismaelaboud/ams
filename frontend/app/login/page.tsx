@@ -1,10 +1,12 @@
-import { LoginForm } from '@/components/login/auth/Login-Form'
-import React from 'react'
+import LoginForm from "@/components/auth/Login-Form";
 
-export default function page() {
+export default function Login() {
   return (
-    <div>
+    <>
+      <main>
         <LoginForm />
-    </div>
-  )
+      </main>
+    </>
+  );
 }
+
