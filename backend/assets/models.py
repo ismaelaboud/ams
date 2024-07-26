@@ -106,7 +106,7 @@ def create_default_categories(sender, **kwargs):
         default_categories = [
             'Furnitures',
             'Electronics',
-            'Office Supplies',
+            'Office Supply',
         ]
         # Create each default category if it doesn't exist
         for category_name in default_categories:

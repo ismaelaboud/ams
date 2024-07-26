@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/auth";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -24,6 +25,8 @@ const formSchema = z.object({
 });
 
 export default function ForgotPassword() {
+  const { loading, forgotPassword } = useAuth();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -32,7 +35,8 @@ export default function ForgotPassword() {
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    console.log(data);
+    const { email } = data;
+    forgotPassword(email);
   };
 
   return (
@@ -73,8 +77,13 @@ export default function ForgotPassword() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Send reset link
+            <Button
+              disabled={loading}
+              aria-disabled={loading}
+              type="submit"
+              className="w-full"
+            >
+              {loading ? "Please wait..." : "Send reset link"}
             </Button>
           </form>
         </Form>

@@ -210,46 +210,64 @@ class DepartmentNameToIdSerializer(serializers.Serializer):
     """
     Serializer for converting a department name to its corresponding ID.
     """
-    department_name = serializers.CharField()
+    departmentName = serializers.CharField()
 
-    def validate_department_name(self, value):
+    def validate_departmentName(self, value):
         """
         Validate that the department name exists and return its ID(s).
         """
         departments = Department.objects.filter(name=value)
         if not departments.exists():
-            raise serializers.ValidationError({"department_name": "Invalid department name."})
+            raise serializers.ValidationError("Invalid department name.")
+        
+        # Return the ID of the first department found with the name
+        return departments.first().id
 
-        # Handle multiple departments with the same name
-        return [department.id for department in departments]
 
+# ====================== Converting category name to its corresponding id =====================
+class CategoryNameToIdSerializer(serializers.Serializer):
+    """
+    Serializer for converting a category name to its corresponding ID.
+    """
+    category = serializers.CharField()
+
+    def validate_category(self, value):
+        """
+        Validate that the category name exists and return its ID.
+        """
+        categories = Category.objects.filter(name=value)
+        if not categories.exists():
+            raise serializers.ValidationError("Invalid category name.")
+        
+        # Return the ID of the first category found with the name
+        return categories.first().id
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for updating user profile information.
     """
-    user = CustomUserSerializer(partial=True)  # Allow partial updates on user
+    user = CustomUserSerializer(partial=True)
     department = serializers.PrimaryKeyRelatedField(
         queryset=Department.objects.all(), 
         required=False, 
         write_only=True
     )
-    department_name = serializers.CharField(write_only=True, required=False)
+    departmentName = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Profile
-        fields = ['user', 'department', 'department_name', 'role']
+        fields = ['user', 'department', 'departmentName', 'role']
 
     def validate(self, data):
         """
-        Override the validate method to use DepartmentNameToIdSerializer
+        Override the validate method to use DepartmentNameToIdSerializer.
         """
-        department_name = data.get('department_name')
-        if department_name:
-            dept_serializer = DepartmentNameToIdSerializer(data={'department_name': department_name})
+        departmentName = data.get('departmentName')
+        if departmentName:
+            dept_serializer = DepartmentNameToIdSerializer(data={'departmentName': departmentName})
             if dept_serializer.is_valid():
-                # Use the first department ID if multiple IDs are returned
-                department_id = dept_serializer.validated_data['department_name'][0]
+                # Use the first department ID returned
+                department_id = dept_serializer.validated_data['departmentName']
                 data['department'] = department_id
             else:
                 raise serializers.ValidationError(dept_serializer.errors)
@@ -260,7 +278,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         Customize the representation to include department name.
         """
         representation = super().to_representation(instance)
-        representation['department_name'] = instance.department.name if instance.department else None
+        representation['departmentName'] = instance.department.name if instance.department else None
         return representation
 
     def update(self, instance, validated_data):
@@ -276,17 +294,15 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             else:
                 raise serializers.ValidationError({"user": user_serializer.errors})
 
-        # Update the Department instance (ID assignment)
-        if department_id:
-            instance.department_id = department_id  # Use the department ID
+        # Update the Department (ID assignment)
+        if department_id is not None:
+            instance.department_id = department_id
 
         # Update other fields
         instance.role = validated_data.get('role', instance.role)
         instance.save()
 
         return instance
-
-
 
 
 
@@ -312,14 +328,46 @@ class TagSerializer(serializers.ModelSerializer):
 
 # Serializer for the Asset model
 class AssetSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Asset model.
-    """
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+    category = serializers.CharField(write_only=True)  # Accept as string
+    category_id = serializers.IntegerField(read_only=True, source='category.id')
+    category_name = serializers.CharField(read_only=True, source='category.name')
+    departmentName = serializers.CharField(write_only=True, required=False)
+    assignedDepartment = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), write_only=True, required=False)
 
     class Meta:
         model = Asset
         fields = '__all__'
+
+    def validate(self, data):
+        # Validate and convert category
+        category_value = data.pop('category', None)
+        if category_value:
+            try:
+                # Attempt to find by ID first
+                category = Category.objects.get(id=int(category_value))
+            except (ValueError, Category.DoesNotExist):
+                # If not an ID or category with the name does not exist, try by name
+                category = Category.objects.filter(name=category_value).first()
+                if not category:
+                    raise serializers.ValidationError({'category': 'Category not found.'})
+            data['category'] = category
+
+        # Convert department name to primary key if provided
+        department_name = data.pop('departmentName', None)
+        if department_name:
+            try:
+                department = Department.objects.get(name=department_name)
+                data['assignedDepartment'] = department
+            except Department.DoesNotExist:
+                raise serializers.ValidationError({'departmentName': 'Department not found.'})
+
+        return data
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['category_name'] = instance.category.name if instance.category else None
+        representation['departmentName'] = instance.assignedDepartment.name if instance.assignedDepartment else None
+        return representation
 
 # ===================== Asset Assignment ======================
 class AssetAssignmentSerializer(serializers.ModelSerializer):
