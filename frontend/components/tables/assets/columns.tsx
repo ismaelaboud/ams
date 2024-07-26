@@ -7,11 +7,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CellAction } from "./cell-action";
 
 export type Asset = {
-  id: string;
-  name: string;
-  description: string;
-  serialNumber: string;
-  category: string;
+  id?: number;
+  category: {
+    id?: number;
+    name?: string;
+  };
+  name?: string;
+  assetType?: string;
+  description?: string;
+  serialNumber?: string;
+  dateRecorded?: string;
+  status?: string;
+  assignedDepartment?: number;
 };
 
 export const columns: ColumnDef<Asset>[] = [
@@ -59,11 +66,22 @@ export const columns: ColumnDef<Asset>[] = [
   },
   {
     accessorKey: "category",
-    header: () => <div className="text-right">Category</div>,
+    header: () => <div>Category</div>,
+    cell: ({ row }) => {
+      return (
+        <div className="font-medium capitalize">
+          {row.getValue("category")?.name}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    header: () => <div className="text-right">Status</div>,
     cell: ({ row }) => {
       return (
         <div className="text-right font-medium capitalize">
-          {row.getValue("category")}
+          {row.getValue("status")}
         </div>
       );
     },

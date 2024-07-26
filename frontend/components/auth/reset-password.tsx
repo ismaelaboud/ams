@@ -14,27 +14,37 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth";
 
 const formSchema = z.object({
-  newPassword: z.string().min(8, {
+  new_password: z.string().min(8, {
     message: "New password must be at least 8 characters.",
   }),
-  confirmPassword: z.string().min(8, {
+  confirm_new_password: z.string().min(8, {
     message: "Confirm password must be at least 8 characters.",
   }),
 });
 
 export default function ResetPassword() {
+  const { loading, resetPassword } = useAuth();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      confirmPassword: "",
-      newPassword: "",
+      new_password: "",
+      confirm_new_password: "",
     },
   });
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+
+  const searchParams = useSearchParams();
+  const uidb64 = searchParams?.get("uidb64") as string;
+  const token = searchParams?.get("token") as string;
+
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    const { new_password, confirm_new_password } = data;
+    resetPassword(uidb64, token, new_password, confirm_new_password);
   }
+
   return (
     <section className="flex items-center justify-center h-screen">
       <div className="flex flex-col gap-6 border rounded-lg p-10 max-w-md w-full">
@@ -51,7 +61,7 @@ export default function ResetPassword() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
               control={form.control}
-              name="newPassword"
+              name="new_password"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>New Password</FormLabel>
@@ -70,7 +80,7 @@ export default function ResetPassword() {
             />
             <FormField
               control={form.control}
-              name="confirmPassword"
+              name="confirm_new_password"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
@@ -87,8 +97,13 @@ export default function ResetPassword() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Reset Password
+            <Button
+              disabled={loading}
+              aria-disabled={loading}
+              type="submit"
+              className="w-full"
+            >
+              {loading ? "Please wait..." : "Reset Password"}
             </Button>
           </form>
         </Form>
