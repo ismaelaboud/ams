@@ -22,6 +22,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { apiUrl } from "@/lib/axios";
+import { useEffect, useState } from "react";
+import { toast } from "../ui/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(3, {
@@ -30,48 +33,118 @@ const formSchema = z.object({
   description: z.string().min(10, {
     message: "Asset description must be atleast 10 characters",
   }),
-  serialNumber: z.string().min(5, {
-    message: "Asset serial no. must be atleast 5 characters",
-  }),
   assetType: z.string().min(1, {
-    message: "Please select a asset type.",
+    message: "Please add an asset type.",
+  }),
+  assignedDepartment: z.string().min(1, {
+    message: "Please add an asset department.",
   }),
   category: z.string().min(1, {
-    message: "Please select asset category.",
+    message: "Please select an asset category.",
+  }),
+  status: z.string().min(1, {
+    message: "Please select asset status.",
   }),
 });
 
 type AssetAddFormValues = z.infer<typeof formSchema>;
 
-export const categories = [
-  {
-    title: "Electronics",
-    value: "electronics",
-  },
-  {
-    title: "Furnitures",
-    value: "furnitures",
-  },
-  {
-    title: "Office Supplies",
-    value: "office-supplies",
-  },
-];
+export type Category = {
+  id: number;
+  name: string;
+};
+
+export type Department = {
+  id: number;
+  name: string;
+};
 
 export default function AssetAddForm() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [adding, setAdding] = useState<boolean>(false);
+  // const [category, setCategory] = useState();
+
+  const getCategories = async () => {
+    const accessToken = localStorage.getItem("access");
+    const { data } = await apiUrl.get("/categories/", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    setCategories(data);
+  };
+
+  const getDepartments = async () => {
+    const accessToken = localStorage.getItem("access");
+    const { data } = await apiUrl.get("/departments/", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    setDepartments(data);
+  };
+
+  useEffect(() => {
+    getCategories();
+    getDepartments();
+  }, []);
+
   const form = useForm<AssetAddFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       description: "",
-      serialNumber: "",
       assetType: "",
       category: "",
+      assignedDepartment: "",
+      status: "",
     },
   });
 
   const onSubmit = async (data: AssetAddFormValues) => {
-    console.log(data);
+    const randomNumber = Math.floor(Math.random() * 1000000);
+    const serialNumber = `AS${randomNumber}`;
+
+    const {
+      name,
+      description,
+      assetType,
+      category,
+      assignedDepartment,
+      status,
+    } = data;
+
+    const payload = {
+      ...data,
+      serialNumber,
+    };
+
+    console.log("Payload: ", payload);
+    try {
+      const accessToken = localStorage.getItem("access");
+      setAdding(true);
+      const { data } = await apiUrl.post("/assets/", payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      setAdding(false);
+      toast({
+        title: "Success",
+        description: data?.message || "Password update successful",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong, Please try again",
+        variant: "destructive",
+      });
+      setAdding(false);
+    }
   };
 
   return (
@@ -117,9 +190,9 @@ export default function AssetAddForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories.map((option: any, index: number) => (
-                          <SelectItem key={index} value={option?.value}>
-                            {option?.title}
+                        {categories?.map((option: Category) => (
+                          <SelectItem key={option?.id} value={option?.name}>
+                            {option?.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -132,18 +205,27 @@ export default function AssetAddForm() {
             <div className="grid sm:grid-cols-2 gap-8">
               <FormField
                 control={form.control}
-                name="serialNumber"
+                name="assignedDepartment"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Serial number</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Serial Number"
-                        {...field}
-                        className="w-full"
-                      />
-                    </FormControl>
+                    <FormLabel>Assigned department</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a department" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {departments?.map((option: Department) => (
+                          <SelectItem key={option?.id} value={option?.name}>
+                            {option?.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -154,23 +236,14 @@ export default function AssetAddForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Asset type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select asset type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((option: any, index: number) => (
-                          <SelectItem key={index} value={option?.value}>
-                            {option?.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Asset type"
+                        {...field}
+                        className="w-full"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -197,8 +270,34 @@ export default function AssetAddForm() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Available">Available</SelectItem>
+                        <SelectItem value="Unavailable">Unavailable</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <Button>Add asset</Button>
+            <Button type="submit" disabled={adding} aria-disabled={adding}>
+              {adding ? "Adding..." : "Add asset"}
+            </Button>
           </form>
         </Form>
       </section>

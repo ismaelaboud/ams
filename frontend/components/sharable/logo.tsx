@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function Logo() {
   return (
     <>
-      <Link href="/dashboard" className="flex gap-2 items-center">
+      <Link href="/" className="flex gap-2 items-center">
         <Image
           src="/assets/logo.png"
           alt="sph_logo"
