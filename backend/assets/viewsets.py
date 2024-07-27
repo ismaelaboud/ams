@@ -191,9 +191,12 @@ class AssetCategoryFilterViewSet(viewsets.ReadOnlyModelViewSet):
 # ============================== Manipulating a single asset in Asset model ===================================
 
 class AssetDetailView(APIView):
+    """
+    View to handle GET, PUT, PATCH, and DELETE requests for a specific asset.
+    """
     def get(self, request, id):
-        asset = get_object_or_404(Asset.objects.select_related('category', 'assignedDepartment'), id=id)
-        serializer = AssetWithCategorySerializer(asset)
+        asset = get_object_or_404(Asset.objects.select_related('category', 'departmentName'), id=id)
+        serializer = AssetSerializer(asset)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, id):

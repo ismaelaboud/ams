@@ -126,7 +126,7 @@ AUTH_USER_MODEL = 'assets.CustomUser'  # Custom user model
 
 # Configuring CORS headers to restrict host access
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5000",
+    "http://localhost:3000",
     "http://localhost:8000",
     # "http://95cc-197-237-236-78.ngrok-free.app",  # Add your domain here
 ]
