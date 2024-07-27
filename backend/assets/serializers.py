@@ -329,8 +329,8 @@ class TagSerializer(serializers.ModelSerializer):
 # Serializer for the Asset model
 class AssetSerializer(serializers.ModelSerializer):
     category = serializers.CharField(write_only=True)  # Accept as string
-    category_id = serializers.IntegerField(read_only=True, source='category.id')
-    category_name = serializers.CharField(read_only=True, source='category.name')
+    categoryId = serializers.IntegerField(read_only=True, source='category.id')
+    categoryName = serializers.CharField(read_only=True, source='category.name')
     departmentName = serializers.CharField(write_only=True, required=False)
     assignedDepartment = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), write_only=True, required=False)
 
@@ -343,29 +343,26 @@ class AssetSerializer(serializers.ModelSerializer):
         category_value = data.pop('category', None)
         if category_value:
             try:
-                # Attempt to find by ID first
                 category = Category.objects.get(id=int(category_value))
             except (ValueError, Category.DoesNotExist):
-                # If not an ID or category with the name does not exist, try by name
                 category = Category.objects.filter(name=category_value).first()
                 if not category:
                     raise serializers.ValidationError({'category': 'Category not found.'})
             data['category'] = category
 
-        # Convert department name to primary key if provided
+        # Convert department name to Department instance if provided
         department_name = data.pop('departmentName', None)
         if department_name:
-            try:
-                department = Department.objects.get(name=department_name)
-                data['assignedDepartment'] = department
-            except Department.DoesNotExist:
+            department = Department.objects.filter(name=department_name).first()
+            if not department:
                 raise serializers.ValidationError({'departmentName': 'Department not found.'})
+            data['assignedDepartment'] = department  # Assign the Department instance
 
         return data
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['category_name'] = instance.category.name if instance.category else None
+        representation['categoryName'] = instance.category.name if instance.category else None
         representation['departmentName'] = instance.assignedDepartment.name if instance.assignedDepartment else None
         return representation
 
