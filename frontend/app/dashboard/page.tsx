@@ -55,7 +55,6 @@ export default function Dashboard() {
 
         const allAssets = sortAssetsByDateAdded(data?.results);
         setAllAssets(allAssets);
-        // console.log(data);
       } catch (error: any) {
         console.log(error);
       }
@@ -73,7 +72,6 @@ export default function Dashboard() {
           }
         );
         setFurnitures(data?.count);
-        // console.log(data);
       } catch (error: any) {
         console.log(error);
       }
@@ -91,7 +89,6 @@ export default function Dashboard() {
           }
         );
         setElectronics(data?.count);
-        // console.log(data);
       } catch (error: any) {
         console.log(error);
       }
@@ -101,7 +98,7 @@ export default function Dashboard() {
       const accessToken = localStorage.getItem("access");
       try {
         const { data } = await apiUrl.get(
-          "/assets-by-category/?category_name=Office Supplies",
+          "/assets-by-category/?category_name=Office Supply",
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -109,7 +106,6 @@ export default function Dashboard() {
           }
         );
         setOfficeSupplies(data?.count);
-        // console.log(data);
       } catch (error: any) {
         console.log(error);
       }

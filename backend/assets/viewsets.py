@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, views
 from rest_framework_simplejwt.tokens import RefreshToken
+from assets import serializers
 from assets.models import AssetTag, Category, Department, Profile, Tag, Asset, CustomUser, AssetAssignment
 from assets.serializers import (
     AssetWithCategorySerializer, CategorySerializer, DepartmentSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ProfileSerializer,
@@ -153,12 +154,21 @@ class AssetViewSet(viewsets.ModelViewSet):
     serializer_class = AssetSerializer
 
     def get_permissions(self):
-        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            self.permission_classes = [IsAdminUser]
+        if self.request.method == 'POST':
+            permission_classes = [IsAdminUser]
         else:
-            self.permission_classes = [IsAuthenticated]
-        return super().get_permissions()
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
+    def create(self, request, *args, **kwargs):
+        # Call the original create method to save the asset
+        response = super().create(request, *args, **kwargs)
+        # Modify the response to include a custom message
+        response.data = {
+            'message': 'Added successfully',
+            'data': response.data  # Include the original data
+        }
+        return response
 class AssetCategoryFilterViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AssetWithCategorySerializer
     permission_classes = [IsAuthenticated]
