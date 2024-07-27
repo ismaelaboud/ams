@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -28,7 +29,7 @@ import { toast } from "../ui/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(3, {
-    message: "Assett name must be atleast 3 characters",
+    message: "Asset name must be atleast 3 characters",
   }),
   description: z.string().min(10, {
     message: "Asset description must be atleast 10 characters",
@@ -36,7 +37,7 @@ const formSchema = z.object({
   assetType: z.string().min(1, {
     message: "Please add an asset type.",
   }),
-  assignedDepartment: z.string().min(1, {
+  departmentName: z.string().min(1, {
     message: "Please add an asset department.",
   }),
   category: z.string().min(1, {
@@ -63,7 +64,7 @@ export default function AssetAddForm() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [adding, setAdding] = useState<boolean>(false);
-  // const [category, setCategory] = useState();
+  const router = useRouter();
 
   const getCategories = async () => {
     const accessToken = localStorage.getItem("access");
@@ -97,7 +98,7 @@ export default function AssetAddForm() {
       description: "",
       assetType: "",
       category: "",
-      assignedDepartment: "",
+      departmentName: "",
       status: "",
     },
   });
@@ -106,21 +107,11 @@ export default function AssetAddForm() {
     const randomNumber = Math.floor(Math.random() * 1000000);
     const serialNumber = `AS${randomNumber}`;
 
-    const {
-      name,
-      description,
-      assetType,
-      category,
-      assignedDepartment,
-      status,
-    } = data;
-
     const payload = {
       ...data,
       serialNumber,
     };
 
-    console.log("Payload: ", payload);
     try {
       const accessToken = localStorage.getItem("access");
       setAdding(true);
@@ -133,8 +124,9 @@ export default function AssetAddForm() {
       setAdding(false);
       toast({
         title: "Success",
-        description: data?.message || "Password update successful",
+        description: data?.message || "Asset added successfully",
       });
+      router.push("/dashboard/assets");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -205,10 +197,10 @@ export default function AssetAddForm() {
             <div className="grid sm:grid-cols-2 gap-8">
               <FormField
                 control={form.control}
-                name="assignedDepartment"
+                name="departmentName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assigned department</FormLabel>
+                    <FormLabel>Department name</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -287,7 +279,10 @@ export default function AssetAddForm() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Available">Available</SelectItem>
-                        <SelectItem value="Unavailable">Unavailable</SelectItem>
+                        <SelectItem value="Maintenance">Maintenance</SelectItem>
+                        <SelectItem value="Booked">Booked</SelectItem>
+                        <SelectItem value="In use">In use</SelectItem>
+                        <SelectItem value="Archived">Archived</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

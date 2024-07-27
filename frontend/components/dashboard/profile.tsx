@@ -88,7 +88,9 @@ export default function ProfileDetails() {
               <Input
                 type="text"
                 placeholder="Firstname"
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFirstName(e.target.value)
+                }
                 className="w-full"
                 defaultValue={firstName}
               />
@@ -98,7 +100,9 @@ export default function ProfileDetails() {
               <Input
                 type="text"
                 placeholder="Lastname"
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setLastName(e.target.value)
+                }
                 className="w-full"
                 defaultValue={lastName}
               />
@@ -110,7 +114,7 @@ export default function ProfileDetails() {
               <Input
                 type="text"
                 placeholder="Username"
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                 className="w-full"
                 defaultValue={username}
               />
@@ -120,7 +124,7 @@ export default function ProfileDetails() {
               <Input
                 type="email"
                 placeholder="Email address"
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 className="w-full"
                 defaultValue={email}
               />
@@ -146,7 +150,9 @@ export default function ProfileDetails() {
               <Input
                 type="password"
                 placeholder="********"
-                onChange={(e) => setOldPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setOldPassword(e.target.value)
+                }
                 className="w-full"
                 value={oldPassword}
                 required
@@ -157,7 +163,9 @@ export default function ProfileDetails() {
               <Input
                 type="password"
                 placeholder="********"
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setNewPassword(e.target.value)
+                }
                 className="w-full"
                 value={newPassword}
                 required
@@ -168,7 +176,9 @@ export default function ProfileDetails() {
               <Input
                 type="password"
                 placeholder="********"
-                onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setNewPasswordConfirm(e.target.value)
+                }
                 className="w-full"
                 value={newPasswordConfirm}
                 required
