@@ -48,3 +48,6 @@ make sure you have nodeJs and npm installed on your machine
 run ```npm install``` to install dependancies 
 
 then run ```npm run dev``` to run the development server
+
+
+Read full documentation [here](https://www.dropbox.com/scl/fi/zrrf4dw7iekl5qzvvc3e6/Swahilipot-Hub-Asset-Management-System-Documentation.paper?rlkey=8ck6tq0uzoiti3997jzruv9p6&dl=0)
