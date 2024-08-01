@@ -1,5 +1,5 @@
 import axios from "axios";
 
 export const apiUrl = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: "https://ngemuantony.pythonanywhere.com/api",
 });
