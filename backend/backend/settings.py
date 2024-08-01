@@ -3,7 +3,7 @@ Settings module for the Django project.
 
 This file contains the default configuration for the Django application, including settings
 for installed applications, middleware, templates, database configuration, password validation,
-internationalization, static files, and more. It also includes configurations for third-party 
+internationalization, static files, and more. It also includes configurations for third-party
 applications like Django REST framework, JWT authentication, and email backend settings.
 """
 
@@ -19,32 +19,48 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-sv8hm9fmt3$$_pdjz7xl3)dclejl(g358sl7o+jk-0f_!r&my+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-
-import os
 
 # Other settings...
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Static files (CSS, JavaScript, Images) settings
+STATIC_URL = '/static/'  # URL to access static files
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Update ALLOWED_HOSTS with the domains you want to allow
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['ngemuantony.pythonanywhere.com','sphub-ams.vercel.app', '127.0.0.1']
+"""
+Configuration for trusted and allowed origins.
+
+This configuration ensures that the web application can securely
+interact with specified origins. The `CSRF_TRUSTED_ORIGINS` list
+specifies which origins can be trusted for CSRF protection, while
+the `CORS_ALLOWED_ORIGINS` list specifies which origins are allowed
+to make cross-origin requests.
+"""
+
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000',
-    'https://localhost:8000',
-    'http://127.0.0.1:8000',
-    'https://127.0.0.1:8000'
+    "https://ngemuantony.pythonanywhere.com",  # Production server
+    'https://sphub-ams.vercel.app',           # Another production server
+    'http://localhost:3000',                  # Local development (HTTP)
+    'https://localhost:8000',                 # Local development (HTTPS)
+    'http://127.0.0.1:3000',                  # Localhost by IP (HTTP)
+    'https://127.0.0.1:8000'                  # Localhost by IP (HTTPS)
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5000",
-    "http://localhost:8000",
-    "https://localhost:8000",
-    "http://127.0.0.1:8000",
-    "https://127.0.0.1:8000"
+    "https://ngemuantony.pythonanywhere.com",  # Production server
+    'https://sphub-ams.vercel.app',           # Another production server
+    "http://localhost:3000",                  # Local development (HTTP)
+    "http://localhost:3000",                  # Local development (duplicate entry)
+    "https://localhost:8000",                 # Local development (HTTPS)
+    "http://127.0.0.1:8000",                  # Localhost by IP (HTTP)
 ]
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -115,8 +131,6 @@ TIME_ZONE = 'UTC'  # Time zone
 USE_I18N = True  # Enable internationalization
 USE_TZ = True  # Enable timezone support
 
-# Static files (CSS, JavaScript, Images) settings
-STATIC_URL = 'static/'  # URL to access static files
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'  # Default primary key field type
@@ -124,12 +138,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'  # Default primary key fiel
 # Custom user model
 AUTH_USER_MODEL = 'assets.CustomUser'  # Custom user model
 
-# Configuring CORS headers to restrict host access
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8000",
-    # "http://95cc-197-237-236-78.ngrok-free.app",  # Add your domain here
-]
+
 
 # JWT settings configuration
 REST_FRAMEWORK = {
