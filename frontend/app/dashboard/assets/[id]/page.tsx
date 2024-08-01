@@ -90,7 +90,7 @@ export default function ViewAsset({ params }: { params: { id: string } }) {
           <div className="mb-4">
             <span className="font-medium mr-2">Category:</span>
             <span className="text-sm text-muted-foreground">
-              {asset?.category?.name}
+              {asset?.category ?? "No Category"} {/* Handle category as a string */}
             </span>
           </div>
           <div className="mb-4">
