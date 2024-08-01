@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CellAction } from "./cell-action";
 
-// Define the Asset type with category as a string
 export type Asset = {
   id?: number;
-  category?: string; // Changed to string
+  category: {
+    id?: number;
+    name?: string;
+  };
   name?: string;
   assetType?: string;
   description?: string;
@@ -19,7 +21,6 @@ export type Asset = {
   assignedDepartment?: number;
 };
 
-// Define columns for the table
 export const columns: ColumnDef<Asset>[] = [
   {
     id: "select",
@@ -46,42 +47,45 @@ export const columns: ColumnDef<Asset>[] = [
   {
     accessorKey: "serialNumber",
     header: "Serial Number",
-    cell: ({ row }) => (
-      <div>{row.getValue("serialNumber") ?? "N/A"}</div>
-    ),
+    cell: ({ row }) => <div>{row.getValue("serialNumber")}</div>,
   },
   {
     accessorKey: "name",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Asset Name
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("name") ?? "Unknown"}</div>
-    ),
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Asset Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
   },
   {
     accessorKey: "category",
     header: () => <div>Category</div>,
-    cell: ({ row }) => (
-      <div className="font-medium capitalize">
-        {row.getValue("category") ?? "No Category"} {/* Handle potential undefined value */}
-      </div>
-    ),
-  },
+    cell: ({ row }) => {
+      return (
+        <div className="font-medium capitalize">
+          {row.getValue("category")?.name}
+        </div>
+      );
+    },
+    
+},
   {
     accessorKey: "status",
     header: () => <div className="text-right">Status</div>,
-    cell: ({ row }) => (
-      <div className="text-right font-medium capitalize">
-        {row.getValue("status") ?? "Not Specified"}
-      </div>
-    ),
+    cell: ({ row }) => {
+      return (
+        <div className="text-right font-medium capitalize">
+          {row.getValue("status")}
+        </div>
+      );
+    },
   },
   {
     id: "actions",
