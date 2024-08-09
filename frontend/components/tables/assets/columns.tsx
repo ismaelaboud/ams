@@ -68,13 +68,11 @@ export const columns: ColumnDef<Asset>[] = [
     accessorKey: "category",
     header: () => <div>Category</div>,
     cell: ({ row }) => {
-      return (
-        <div className="font-medium capitalize">
-          {row.getValue("category")?.name}
-        </div>
-      );
+      const category = row?.original?.category;
+      return <div className="font-medium capitalize">{category?.name}</div>;
     },
-  },
+    
+},
   {
     accessorKey: "status",
     header: () => <div className="text-right">Status</div>,

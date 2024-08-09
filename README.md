@@ -1,6 +1,7 @@
 # SwahiliPot Hub Foundation Asset Management System
 This project was developed during our attachment period as our final project. It is a comprehensive system    designed to track and manage the assets of SwahiliPot Hub Foundation. The project was built using Django for the backend and React/Next.js for the frontend. The application is deployed on PythonAnywhere for the backend and Vercel for the frontend.
 
+
 ## Project Overview
 The SwahiliPot Hub Foundation Asset Management System provides an easy-to-use interface for managing the foundation's assets. 
 It includes features such as:
@@ -73,3 +74,7 @@ Install the dependencies:
   
 Run the Next.js development server:  
 `npm run dev`
+
+
+Read full documentation [here](https://www.dropbox.com/scl/fi/zrrf4dw7iekl5qzvvc3e6/Swahilipot-Hub-Asset-Management-System-Documentation.paper?rlkey=8ck6tq0uzoiti3997jzruv9p6&dl=0)
+

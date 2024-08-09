@@ -22,9 +22,9 @@ export default function ViewAsset({ params }: { params: { id: string } }) {
     const fetchAsset = async () => {
       const accessToken = localStorage.getItem("access");
       try {
-        const { data } = await apiUrl.get(`/assets/detail/${params?.id}`, {
+        const { data } = await apiUrl.get(/assets/detail/${params?.id}, {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: Bearer ${accessToken},
           },
         });
         setAsset(data);
@@ -39,9 +39,9 @@ export default function ViewAsset({ params }: { params: { id: string } }) {
     const accessToken = localStorage.getItem("access");
     try {
       setDeleting(true);
-      await apiUrl.delete(`/assets/detail/${id}`, {
+      await apiUrl.delete(/assets/detail/${id}, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: Bearer ${accessToken},
         },
       });
       setDeleting(false);
@@ -118,7 +118,7 @@ export default function ViewAsset({ params }: { params: { id: string } }) {
           <div className="flex items-center gap-x-3 mt-6">
             <Button
               onClick={() =>
-                router?.push(`/dashboard/assets/${asset?.id}/edit`)
+                router?.push(/dashboard/assets/${asset?.id}/edit)
               }
             >
               Edit
