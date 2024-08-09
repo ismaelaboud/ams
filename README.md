@@ -76,5 +76,5 @@ Run the Next.js development server:
 `npm run dev`
 
 
-Read full documentation [here](https://www.dropbox.com/scl/fi/zrrf4dw7iekl5qzvvc3e6/Swahilipot-Hub-Asset-Management-System-Documentation.paper?rlkey=8ck6tq0uzoiti3997jzruv9p6&dl=0)
+Read full documentation [here](https://docs.google.com/document/d/1Js134qz7dD2G4ZnRVYkD6AxyNsnsTY8IZmpXcuXm_eg/edit?usp=sharing)
 
