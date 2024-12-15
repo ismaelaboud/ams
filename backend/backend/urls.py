@@ -20,6 +20,5 @@ urlpatterns = [
     path('api/auth/logout/', LogoutView.as_view(), name='logout'),
     path('api/profile/', UserProfileViewSet.as_view(), name='user-profile'),
     path('api/auth/change_password/', PasswordChangeView.as_view(), name='change_password'),
-    path('api/tests/', Test.as_view(), name='tests'),
     path('api/assets/detail/<int:id>/', AssetDetailView.as_view(), name='asset_detail'),
 ]
